@@ -5,7 +5,7 @@ import {
   wrapLanguageModel,
 } from "ai";
 import { isTestEnvironment } from "../constants";
-import { createOpenRouterModel } from "./providers/openrouter";
+// import { createOpenRouterModel } from "./providers/openrouter"; // Temporarily disabled
 
 const THINKING_SUFFIX_REGEX = /-thinking$/;
 
