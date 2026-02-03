@@ -74,6 +74,13 @@ export const chatModels: ChatModel[] = [
     provider: "reasoning",
     description: "Reasoning optimized for code",
   },
+  // OpenRouter models with reasoning support
+  {
+    id: "openrouter/moonshotai/kimi-k2.5",
+    name: "Kimi K2.5 (OpenRouter)",
+    provider: "openrouter",
+    description: "Advanced reasoning model with extended thinking capabilities",
+  },
 ];
 
 // Group models by provider for UI

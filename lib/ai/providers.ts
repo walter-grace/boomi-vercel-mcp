@@ -5,6 +5,7 @@ import {
   wrapLanguageModel,
 } from "ai";
 import { isTestEnvironment } from "../constants";
+import { createOpenRouterModel } from "./providers/openrouter";
 
 const THINKING_SUFFIX_REGEX = /-thinking$/;
 
@@ -30,6 +31,12 @@ export const myProvider = isTestEnvironment
 export function getLanguageModel(modelId: string) {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel(modelId);
+  }
+
+  // Check if it's an OpenRouter model
+  if (modelId.startsWith("openrouter/") || modelId.includes("openrouter")) {
+    const openRouterModelId = modelId.replace("openrouter/", "");
+    return createOpenRouterModel(openRouterModelId);
   }
 
   const isReasoningModel =

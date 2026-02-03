@@ -13,6 +13,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
+import { getBoomiMCPTools } from "@/lib/ai/mcp-client";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -133,12 +134,29 @@ export async function POST(request: Request) {
     const isReasoningModel =
       selectedChatModel.includes("reasoning") ||
       selectedChatModel.includes("thinking");
+    
+    const isOpenRouterModel =
+      selectedChatModel.startsWith("openrouter/") ||
+      selectedChatModel.includes("openrouter");
 
     const modelMessages = await convertToModelMessages(uiMessages);
+
+    // Get Boomi MCP tools
+    const boomiMCPTools = await getBoomiMCPTools();
+    const mcpToolNames = Object.keys(boomiMCPTools);
 
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
+        // Merge existing tools with MCP tools
+        const allTools = {
+          getWeather,
+          createDocument: createDocument({ session, dataStream }),
+          updateDocument: updateDocument({ session, dataStream }),
+          requestSuggestions: requestSuggestions({ session, dataStream }),
+          ...boomiMCPTools,
+        };
+
         const result = streamText({
           model: getLanguageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
@@ -151,6 +169,7 @@ export async function POST(request: Request) {
                 "createDocument",
                 "updateDocument",
                 "requestSuggestions",
+                ...mcpToolNames,
               ],
           providerOptions: isReasoningModel
             ? {
@@ -158,13 +177,16 @@ export async function POST(request: Request) {
                   thinking: { type: "enabled", budgetTokens: 10_000 },
                 },
               }
+            : isOpenRouterModel
+              ? {
+                  // OpenRouter reasoning is handled via the reasoning parameter
+                  // in the API call, which is managed by the custom provider
+                }
+              : undefined,
+          experimental_reasoning: isOpenRouterModel
+            ? { enabled: true }
             : undefined,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({ session, dataStream }),
-          },
+          tools: allTools,
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,
             functionId: "stream-text",
