@@ -13,7 +13,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
-// import { getBoomiMCPTools } from "@/lib/ai/mcp-client"; // Temporarily disabled for build
+import { getBoomiMCPTools } from "@/lib/ai/mcp-client";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -141,11 +141,9 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
-    // Get Boomi MCP tools (temporarily disabled for build)
-    // const boomiMCPTools = await getBoomiMCPTools();
-    // const mcpToolNames = Object.keys(boomiMCPTools);
-    const boomiMCPTools = {};
-    const mcpToolNames: string[] = [];
+    // Get Boomi MCP tools
+    const boomiMCPTools = await getBoomiMCPTools();
+    const mcpToolNames = Object.keys(boomiMCPTools);
 
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
@@ -157,7 +155,7 @@ export async function POST(request: Request) {
           updateDocument: updateDocument({ session, dataStream }),
           requestSuggestions: requestSuggestions({ session, dataStream }),
           ...boomiMCPTools,
-        };
+        } as any;
 
         const result = streamText({
           model: getLanguageModel(selectedChatModel),

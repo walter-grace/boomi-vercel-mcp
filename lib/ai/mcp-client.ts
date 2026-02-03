@@ -1,4 +1,5 @@
 import { tool } from "ai";
+import { z } from "zod";
 
 function getMCPServerURL(): string {
   if (typeof process !== "undefined" && process.env?.BOOMI_MCP_SERVER_URL) {
@@ -109,6 +110,29 @@ async function fetchMCPTools(): Promise<MCPTool[]> {
 }
 
 /**
+ * Convert JSON schema to Zod schema (simplified)
+ */
+function jsonSchemaToZod(schema: MCPTool["inputSchema"]): z.ZodTypeAny {
+  if (schema.type === "object" && schema.properties) {
+    const shape: Record<string, z.ZodTypeAny> = {};
+    for (const [key, prop] of Object.entries(schema.properties)) {
+      const propSchema = prop as { type: string; description?: string };
+      if (propSchema.type === "string") {
+        shape[key] = z.string().optional();
+      } else if (propSchema.type === "number") {
+        shape[key] = z.number().optional();
+      } else if (propSchema.type === "boolean") {
+        shape[key] = z.boolean().optional();
+      } else {
+        shape[key] = z.unknown().optional();
+      }
+    }
+    return z.object(shape);
+  }
+  return z.object({});
+}
+
+/**
  * Convert MCP tool to AI SDK tool format
  */
 function convertMCPToolToAITool(mcpTool: MCPTool) {
@@ -116,11 +140,8 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
     name: mcpTool.name,
     tool: tool({
       description: mcpTool.description,
-      parameters: mcpTool.inputSchema.properties as Record<
-        string,
-        { type: string; description?: string }
-      >,
-      execute: async (args: Record<string, unknown>) => {
+      inputSchema: jsonSchemaToZod(mcpTool.inputSchema),
+      execute: async (args) => {
         try {
         const response = await fetch(MCP_SERVER_URL, {
           method: "POST",
@@ -203,7 +224,7 @@ export async function getBoomiMCPTools(): Promise<
   // Store in cache with names
   mcpToolsCache = Object.fromEntries(
     aiTools.map((tool) => [tool.name, tool.tool])
-  );
+  ) as Record<string, ReturnType<typeof tool>>;
 
   return mcpToolsCache;
 }
