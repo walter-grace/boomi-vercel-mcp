@@ -1,5 +1,5 @@
-import { createCustomLanguageModel } from "ai";
-import type { LanguageModelV3 } from "ai";
+import { customProvider } from "ai";
+import type { LanguageModel } from "ai";
 
 function getOpenRouterAPIKey(): string {
   const apiKey =
@@ -62,11 +62,15 @@ function convertMessagesToOpenRouterFormat(
  * Create an OpenRouter language model with reasoning support
  * Supports models like moonshotai/kimi-k2.5 with reasoning capabilities
  */
-export function createOpenRouterModel(modelId: string): LanguageModelV3 {
+export function createOpenRouterModel(modelId: string): LanguageModel {
   const apiKey = getOpenRouterAPIKey();
 
-  return createCustomLanguageModel({
-    async doStream(options) {
+  return {
+    specificationVersion: "v1",
+    provider: "openrouter",
+    modelId,
+    defaultObjectGenerationMode: "json",
+    doStream: async (options) => {
       // Convert messages to OpenRouter format
       const openRouterMessages = convertMessagesToOpenRouterFormat(
         options.prompt as Array<{ role: string; content: unknown }>
@@ -188,6 +192,6 @@ export function createOpenRouterModel(modelId: string): LanguageModelV3 {
         rawCall: { rawPrompt: options.prompt, rawSettings: {} },
       };
     },
-  });
+  } as LanguageModel;
 }
 

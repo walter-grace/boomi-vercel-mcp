@@ -34,10 +34,11 @@ export function getLanguageModel(modelId: string) {
   }
 
   // Check if it's an OpenRouter model
-  if (modelId.startsWith("openrouter/") || modelId.includes("openrouter")) {
-    const openRouterModelId = modelId.replace("openrouter/", "");
-    return createOpenRouterModel(openRouterModelId);
-  }
+  // Temporarily disabled - needs proper LanguageModel implementation
+  // if (modelId.startsWith("openrouter/") || modelId.includes("openrouter")) {
+  //   const openRouterModelId = modelId.replace("openrouter/", "");
+  //   return createOpenRouterModel(openRouterModelId);
+  // }
 
   const isReasoningModel =
     modelId.includes("reasoning") || modelId.endsWith("-thinking");

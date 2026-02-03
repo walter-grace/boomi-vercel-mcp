@@ -13,7 +13,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
-import { getBoomiMCPTools } from "@/lib/ai/mcp-client";
+// import { getBoomiMCPTools } from "@/lib/ai/mcp-client"; // Temporarily disabled for build
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -141,9 +141,11 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
-    // Get Boomi MCP tools
-    const boomiMCPTools = await getBoomiMCPTools();
-    const mcpToolNames = Object.keys(boomiMCPTools);
+    // Get Boomi MCP tools (temporarily disabled for build)
+    // const boomiMCPTools = await getBoomiMCPTools();
+    // const mcpToolNames = Object.keys(boomiMCPTools);
+    const boomiMCPTools = {};
+    const mcpToolNames: string[] = [];
 
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
@@ -164,13 +166,14 @@ export async function POST(request: Request) {
           stopWhen: stepCountIs(5),
           experimental_activeTools: isReasoningModel
             ? []
-            : [
-                "getWeather",
-                "createDocument",
-                "updateDocument",
-                "requestSuggestions",
-                ...mcpToolNames,
-              ],
+            : mcpToolNames.length > 0
+              ? undefined // Let AI SDK auto-detect tools when MCP tools are present
+              : [
+                  "getWeather",
+                  "createDocument",
+                  "updateDocument",
+                  "requestSuggestions",
+                ],
           providerOptions: isReasoningModel
             ? {
                 anthropic: {
@@ -183,9 +186,6 @@ export async function POST(request: Request) {
                   // in the API call, which is managed by the custom provider
                 }
               : undefined,
-          experimental_reasoning: isOpenRouterModel
-            ? { enabled: true }
-            : undefined,
           tools: allTools,
           experimental_telemetry: {
             isEnabled: isProductionEnvironment,

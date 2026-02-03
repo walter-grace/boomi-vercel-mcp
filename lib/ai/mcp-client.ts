@@ -121,7 +121,7 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
         { type: string; description?: string }
       >,
       execute: async (args: Record<string, unknown>) => {
-      try {
+        try {
         const response = await fetch(MCP_SERVER_URL, {
           method: "POST",
           headers: {
