@@ -79,30 +79,45 @@ async function fetchMCPTools(): Promise<MCPTool[]> {
     // Initialize connection first
     await initializeMCPConnection();
 
-    const response = await fetch(MCP_SERVER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 2,
-        method: "tools/list",
-        params: {},
-      }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-    if (!response.ok) {
-      throw new Error(`MCP server returned ${response.status}`);
+    try {
+      const response = await fetch(MCP_SERVER_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 2,
+          method: "tools/list",
+          params: {},
+        }),
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`MCP server returned ${response.status}`);
+      }
+
+      const data = (await response.json()) as MCPToolsListResponse;
+
+      if (data.error) {
+        throw new Error(data.error.message || "MCP server error");
+      }
+
+      return data.result?.tools || [];
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === "AbortError") {
+        console.error("MCP server request timed out after 10 seconds");
+        return [];
+      }
+      throw error;
     }
-
-    const data = (await response.json()) as MCPToolsListResponse;
-
-    if (data.error) {
-      throw new Error(data.error.message || "MCP server error");
-    }
-
-    return data.result?.tools || [];
   } catch (error) {
     console.error("Failed to fetch MCP tools:", error);
     return [];
@@ -143,52 +158,59 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
       inputSchema: jsonSchemaToZod(mcpTool.inputSchema),
       execute: async (args) => {
         try {
-        const response = await fetch(MCP_SERVER_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: Date.now(),
-            method: "tools/call",
-            params: {
-              name: mcpTool.name,
-              arguments: args,
-            },
-          }),
-        });
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for tool calls
 
-        if (!response.ok) {
-          throw new Error(`MCP server returned ${response.status}`);
-        }
-
-        const data = (await response.json()) as {
-          jsonrpc: string;
-          result?: {
-            content: Array<{ type: string; text: string }>;
-            isError: boolean;
-          };
-          error?: { code: number; message: string };
-          id: number;
-        };
-
-        if (data.error) {
-          throw new Error(data.error.message || "MCP tool execution error");
-        }
-
-        // Extract text content from MCP response
-        const content = data.result?.content?.[0]?.text;
-        if (content) {
           try {
-            // Try to parse as JSON, fallback to string
-            return JSON.parse(content);
-          } catch {
-            return content;
-          }
-        }
+            const response = await fetch(MCP_SERVER_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              signal: controller.signal,
+              body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: Date.now(),
+                method: "tools/call",
+                params: {
+                  name: mcpTool.name,
+                  arguments: args,
+                },
+              }),
+            });
 
-        return data.result || { success: true };
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              throw new Error(`MCP server returned ${response.status}`);
+            }
+
+            const data = (await response.json()) as {
+              jsonrpc: string;
+              result?: {
+                content: Array<{ type: string; text: string }>;
+                isError: boolean;
+              };
+              error?: { code: number; message: string };
+              id: number;
+            };
+
+            if (data.error) {
+              throw new Error(data.error.message || "MCP tool execution error");
+            }
+
+            // Extract text content from MCP response
+            const content = data.result?.content?.[0]?.text;
+            if (content) {
+              try {
+                // Try to parse as JSON, fallback to string
+                return JSON.parse(content);
+              } catch {
+                return content;
+              }
+            }
+
+            return data.result || { success: true };
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
