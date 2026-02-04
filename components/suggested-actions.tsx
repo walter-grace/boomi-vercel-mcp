@@ -15,6 +15,17 @@ type SuggestedActionsProps = {
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const suggestedActions = [
+    // Demo Actions - Featured
+    {
+      category: "Demo - Process View",
+      text: "Show me the process in Frank_Dev",
+      icon: "🎯",
+    },
+    {
+      category: "Demo - Process Breakdown",
+      text: "Breakdown the process ID 1e5efba1-d398-4420-97e2-29da11685980 - explain how it works",
+      icon: "🔍",
+    },
     // Process Management
     {
       category: "Process Management",
