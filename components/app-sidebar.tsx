@@ -71,9 +71,14 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   setOpenMobile(false);
                 }}
               >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  Chatbot
-                </span>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#0073CF] to-[#00A3E0] flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">B</span>
+                  </div>
+                  <span className="cursor-pointer font-bold text-lg bg-gradient-to-r from-[#0073CF] to-[#00A3E0] bg-clip-text text-transparent hover:opacity-80 transition-opacity">
+                    Boomi Assistant
+                  </span>
+                </div>
               </Link>
               <div className="flex flex-row gap-1">
                 {user && (
