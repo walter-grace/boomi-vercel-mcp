@@ -162,6 +162,26 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
           const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for tool calls
 
           try {
+            // Workaround for manage_process, manage_trading_partner, manage_organization
+            // These tools seem to have issues with keyword arguments, so we ensure action comes first
+            let processedArgs = args;
+            if (
+              (mcpTool.name === "manage_process" ||
+                mcpTool.name === "manage_trading_partner" ||
+                mcpTool.name === "manage_organization") &&
+              args &&
+              typeof args === "object" &&
+              "action" in args
+            ) {
+              // Reorder to put action first, which might help with server-side parsing
+              processedArgs = {
+                action: args.action,
+                ...Object.fromEntries(
+                  Object.entries(args).filter(([key]) => key !== "action")
+                ),
+              };
+            }
+
             const response = await fetch(MCP_SERVER_URL, {
               method: "POST",
               headers: {
@@ -174,7 +194,7 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
                 method: "tools/call",
                 params: {
                   name: mcpTool.name,
-                  arguments: args,
+                  arguments: processedArgs,
                 },
               }),
             });
@@ -204,23 +224,188 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
             if (content) {
               try {
                 // Try to parse as JSON, fallback to string
-                return JSON.parse(content);
+                const parsed = JSON.parse(content);
+                
+                // Check for the specific error about missing 'action' parameter
+                // This is a known server-side bug - log it for debugging
+                if (
+                  parsed.error &&
+                  typeof parsed.error === "string" &&
+                  parsed.error.includes("missing 1 required positional argument: 'action'")
+                ) {
+                  console.error(
+                    `[MCP] ⚠️  Server-side bug detected for ${mcpTool.name}`
+                  );
+                  console.error(
+                    `[MCP] The server is not receiving the 'action' parameter correctly.`
+                  );
+                  console.error(
+                    `[MCP] Arguments we sent:`,
+                    JSON.stringify(processedArgs, null, 2)
+                  );
+                  console.error(
+                    `[MCP] Full request was:`,
+                    JSON.stringify(
+                      {
+                        jsonrpc: "2.0",
+                        method: "tools/call",
+                        params: {
+                          name: mcpTool.name,
+                          arguments: processedArgs,
+                        },
+                      },
+                      null,
+                      2
+                    )
+                  );
+                  console.error(
+                    `[MCP] 💡 This is a bug in the MCP server's Python code.`
+                  );
+                  console.error(
+                    `[MCP] The server should be updated to properly handle keyword arguments.`
+                  );
+                }
+                
+                // Check for Boomi API errors (406, 404, etc.)
+                if (
+                  parsed.result &&
+                  parsed.result._success === false &&
+                  parsed.result.error
+                ) {
+                  const errorMsg = parsed.result.error;
+                  if (errorMsg.includes("406 error") || errorMsg.includes("ApiError")) {
+                    console.error(
+                      `[MCP] ⚠️  Boomi API error for ${mcpTool.name}`
+                    );
+                    console.error(
+                      `[MCP] Error: ${parsed.result.error}`
+                    );
+                    if (parsed.result.hint) {
+                      console.error(
+                        `[MCP] Hint: ${parsed.result.hint}`
+                      );
+                    }
+                    console.error(
+                      `[MCP] This might indicate:`
+                    );
+                    console.error(
+                      `[MCP]   - The component ID format is incorrect`
+                    );
+                    console.error(
+                      `[MCP]   - The API endpoint expects different parameters`
+                    );
+                    console.error(
+                      `[MCP]   - Access permissions issue`
+                    );
+                  }
+                }
+                
+                return parsed;
               } catch {
                 return content;
               }
             }
 
             return data.result || { success: true };
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        return {
-          error: `Failed to execute ${mcpTool.name}: ${errorMessage}`,
-        };
-      }
+          } catch (error) {
+            clearTimeout(timeoutId);
+            if (error instanceof Error && error.name === "AbortError") {
+              console.error(`MCP tool ${mcpTool.name} timed out after 30 seconds`);
+              return { error: "Request timeout: MCP server took too long to respond" };
+            }
+            throw error;
+          }
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+          return {
+            error: `Failed to execute ${mcpTool.name}: ${errorMessage}`,
+          };
+        }
     },
     }),
   };
+}
+
+/**
+ * Automatically set Boomi credentials from environment variables if available
+ */
+async function autoSetBoomiCredentials(): Promise<void> {
+  const accountId =
+    typeof process !== "undefined" && process.env?.BOOMI_ACCOUNT_ID
+      ? process.env.BOOMI_ACCOUNT_ID
+      : null;
+  const username =
+    typeof process !== "undefined" && process.env?.BOOMI_USERNAME
+      ? process.env.BOOMI_USERNAME
+      : null;
+  const apiToken =
+    typeof process !== "undefined" && process.env?.BOOMI_API_TOKEN
+      ? process.env.BOOMI_API_TOKEN
+      : null;
+  const profileName =
+    typeof process !== "undefined" && process.env?.BOOMI_PROFILE_NAME
+      ? process.env.BOOMI_PROFILE_NAME
+      : "production";
+
+  // Only set if all required variables are present
+  if (accountId && username && apiToken) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const response = await fetch(MCP_SERVER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: Date.now(),
+            method: "tools/call",
+            params: {
+              name: "set_boomi_credentials",
+              arguments: {
+                profile: profileName,
+                account_id: accountId,
+                username: username,
+                password: apiToken, // MCP server expects 'password' parameter
+              },
+            },
+          }),
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const data = (await response.json()) as {
+            jsonrpc: string;
+            result?: {
+              content: Array<{ type: string; text: string }>;
+            };
+            error?: { code: number; message: string };
+          };
+
+          if (!data.error) {
+            console.log(`✅ Auto-configured Boomi profile: ${profileName}`);
+          } else {
+            console.warn(
+              `⚠️  Failed to auto-set Boomi credentials: ${data.error.message}`
+            );
+          }
+        }
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name !== "AbortError") {
+          console.warn(
+            `⚠️  Failed to auto-set Boomi credentials: ${error.message}`
+          );
+        }
+      }
+    } catch (error) {
+      // Silently fail - credentials can be set manually if needed
+    }
+  }
 }
 
 /**
@@ -233,6 +418,9 @@ export async function getBoomiMCPTools(): Promise<
   if (mcpToolsCache) {
     return mcpToolsCache;
   }
+
+  // Auto-set credentials from environment variables
+  await autoSetBoomiCredentials();
 
   const mcpTools = await fetchMCPTools();
 

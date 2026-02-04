@@ -50,9 +50,17 @@ function PureMessages({
         ref={messagesContainerRef}
       >
         <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-4 px-2 py-4 md:gap-6 md:px-4">
+          {(() => {
+            console.log("[UI] Messages component render - messages count:", messages.length);
+            console.log("[UI] Messages:", messages.map(m => ({ id: m.id, role: m.role, partsCount: m.parts?.length || 0 })));
+            return null;
+          })()}
+          
           {messages.length === 0 && <Greeting />}
 
-          {messages.map((message, index) => (
+          {messages.map((message, index) => {
+            console.log(`[UI] Rendering message ${index}:`, { id: message.id, role: message.role, parts: message.parts?.length || 0 });
+            return (
             <PreviewMessage
               addToolApprovalResponse={addToolApprovalResponse}
               chatId={chatId}
@@ -73,7 +81,8 @@ function PureMessages({
                   : undefined
               }
             />
-          ))}
+            );
+          })}
 
           {status === "submitted" &&
             !messages.some((msg) =>

@@ -138,17 +138,31 @@ export function Chat({
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
     onError: (error) => {
+      console.error("[UI] Chat error:", error);
+      console.error("[UI] Error type:", error?.constructor?.name);
+      console.error("[UI] Error message:", error?.message);
+      console.error("[UI] Error stack:", error?.stack);
+      
       if (error instanceof ChatSDKError) {
+        console.log("[UI] ChatSDKError detected");
         if (
           error.message?.includes("AI Gateway requires a valid credit card")
         ) {
+          console.log("[UI] Showing credit card alert");
           setShowCreditCardAlert(true);
         } else {
+          console.log("[UI] Showing error toast:", error.message);
           toast({
             type: "error",
             description: error.message,
           });
         }
+      } else {
+        console.log("[UI] Non-ChatSDKError, showing generic error");
+        toast({
+          type: "error",
+          description: error?.message || "An unexpected error occurred",
+        });
       }
     },
   });

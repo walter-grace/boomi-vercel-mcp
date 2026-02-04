@@ -142,12 +142,20 @@ export async function POST(request: Request) {
     const modelMessages = await convertToModelMessages(uiMessages);
 
     // Get Boomi MCP tools
+    console.log("[Chat] Fetching Boomi MCP tools...");
     const boomiMCPTools = await getBoomiMCPTools();
     const mcpToolNames = Object.keys(boomiMCPTools);
+    console.log(`[Chat] ✅ MCP Tools loaded: ${mcpToolNames.length} tools`);
+    if (mcpToolNames.length > 0) {
+      console.log(`[Chat] MCP Tool names: ${mcpToolNames.join(", ")}`);
+    }
 
+    console.log("[Chat] Creating UI message stream...");
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
+        console.log("[Chat] ⚡ EXECUTE FUNCTION CALLED! Stream is being consumed.");
+        
         // Merge existing tools with MCP tools
         const allTools = {
           getWeather,
@@ -156,9 +164,16 @@ export async function POST(request: Request) {
           requestSuggestions: requestSuggestions({ session, dataStream }),
           ...boomiMCPTools,
         } as any;
+        
+        console.log(`[Chat] ✅ All tools merged: ${Object.keys(allTools).length} total`);
+        console.log(`[Chat]   - Built-in: getWeather, createDocument, updateDocument, requestSuggestions`);
+        console.log(`[Chat]   - MCP tools: ${mcpToolNames.length} (${mcpToolNames.slice(0, 3).join(", ")}${mcpToolNames.length > 3 ? "..." : ""})`);
 
+        const languageModel = getLanguageModel(selectedChatModel);
+        console.log(`[Chat] Using model: ${selectedChatModel}, provider: ${languageModel.provider || 'unknown'}`);
+        
         const result = streamText({
-          model: getLanguageModel(selectedChatModel),
+          model: languageModel,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages: modelMessages,
           stopWhen: stepCountIs(5),
@@ -191,7 +206,19 @@ export async function POST(request: Request) {
           },
         });
 
-        dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
+        try {
+          console.log("[Chat] Starting stream merge...");
+          const uiStream = result.toUIMessageStream({ sendReasoning: true });
+          console.log("[Chat] UI stream created, merging...");
+          
+          // Type assertion needed due to generic type differences between UIMessage and ChatMessage
+          dataStream.merge(uiStream as any);
+          console.log("[Chat] Stream merged successfully");
+        } catch (streamError) {
+          console.error("[Chat] Stream error:", streamError);
+          console.error("[Chat] Stream error details:", JSON.stringify(streamError, null, 2));
+          throw streamError;
+        }
 
         if (titlePromise) {
           const title = await titlePromise;
@@ -237,10 +264,15 @@ export async function POST(request: Request) {
           });
         }
       },
-      onError: () => "Oops, an error occurred!",
+      onError: (error) => {
+        console.error("[Chat] onError callback triggered:", error);
+        return "Oops, an error occurred!";
+      },
     });
 
-    return createUIMessageStreamResponse({
+    console.log("[Chat] Creating UI message stream response...");
+    console.log("[Chat] Stream object:", typeof stream, stream ? "exists" : "null");
+    const response = createUIMessageStreamResponse({
       stream,
       async consumeSseStream({ stream: sseStream }) {
         if (!process.env.REDIS_URL) {
@@ -261,6 +293,9 @@ export async function POST(request: Request) {
         }
       },
     });
+    
+    console.log("[Chat] Response created, returning...");
+    return response;
   } catch (error) {
     const vercelId = request.headers.get("x-vercel-id");
 

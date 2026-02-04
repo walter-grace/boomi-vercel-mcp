@@ -15,10 +15,18 @@ type SuggestedActionsProps = {
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const suggestedActions = [
-    "What are the advantages of using Next.js?",
-    "Write code to demonstrate Dijkstra's algorithm",
-    "Help me write an essay about Silicon Valley",
-    "What is the weather in San Francisco?",
+    // Process Management
+    "List all Boomi processes in the production profile",
+    "Show me processes in the Process Library folder",
+    "Get details for process ID 1e5efba1-d398-4420-97e2-29da11685980",
+    // Trading Partner Management
+    "Show me all trading partners in Boomi",
+    "List all my trading partners",
+    // Account & Profile Management
+    "Get my Boomi account information",
+    "List my Boomi profiles",
+    // Process Creation
+    "Create a new Boomi process called 'My Integration' with a start shape, message shape, and stop shape",
   ];
 
   return (

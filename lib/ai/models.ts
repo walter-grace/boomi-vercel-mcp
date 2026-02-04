@@ -1,5 +1,9 @@
-// Curated list of top models from Vercel AI Gateway
-export const DEFAULT_CHAT_MODEL = "google/gemini-2.5-flash-lite";
+// Default to OpenRouter if available (single API key for 100+ models!)
+// Otherwise fallback to OpenAI Direct
+export const DEFAULT_CHAT_MODEL =
+  typeof process !== "undefined" && process.env.OPENROUTER_API_KEY
+    ? "openrouter/openai/gpt-4o-mini"
+    : "openai-direct/gpt-4o-mini";
 
 export type ChatModel = {
   id: string;
@@ -9,6 +13,79 @@ export type ChatModel = {
 };
 
 export const chatModels: ChatModel[] = [
+  // OpenRouter Models (Single API Key for 100+ models!)
+  {
+    id: "openrouter/openai/gpt-4o",
+    name: "GPT-4o (OpenRouter)",
+    provider: "openrouter",
+    description: "Latest GPT-4o via OpenRouter",
+  },
+  {
+    id: "openrouter/openai/gpt-4o-mini",
+    name: "GPT-4o Mini (OpenRouter)",
+    provider: "openrouter",
+    description: "Fast and affordable GPT-4o Mini",
+  },
+  {
+    id: "openrouter/openai/gpt-4-turbo",
+    name: "GPT-4 Turbo (OpenRouter)",
+    provider: "openrouter",
+    description: "High-performance GPT-4 Turbo",
+  },
+  {
+    id: "openrouter/openai/gpt-5-nano",
+    name: "GPT-5 Nano (OpenRouter)",
+    provider: "openrouter",
+    description: "Ultra-fast and efficient GPT-5 Nano",
+  },
+  {
+    id: "openrouter/anthropic/claude-3.5-sonnet",
+    name: "Claude 3.5 Sonnet (OpenRouter)",
+    provider: "openrouter",
+    description: "Best balance of speed and intelligence",
+  },
+  {
+    id: "openrouter/anthropic/claude-3-opus",
+    name: "Claude 3 Opus (OpenRouter)",
+    provider: "openrouter",
+    description: "Most capable Anthropic model",
+  },
+  {
+    id: "openrouter/google/gemini-pro",
+    name: "Gemini Pro (OpenRouter)",
+    provider: "openrouter",
+    description: "Google's advanced model",
+  },
+  {
+    id: "openrouter/moonshotai/kimi-k2.5",
+    name: "Kimi K2.5 (OpenRouter)",
+    provider: "openrouter",
+    description: "Reasoning model with extended thinking",
+  },
+  {
+    id: "openrouter/xai/grok-beta",
+    name: "Grok Beta (OpenRouter)",
+    provider: "openrouter",
+    description: "xAI's conversational model",
+  },
+  {
+    id: "openrouter/google/gemini-3-flash-preview",
+    name: "Gemini 3 Flash Preview (OpenRouter)",
+    provider: "openrouter",
+    description: "Google's latest fast model",
+  },
+  {
+    id: "openrouter/anthropic/claude-sonnet-4.5",
+    name: "Claude Sonnet 4.5 (OpenRouter)",
+    provider: "openrouter",
+    description: "Latest Claude Sonnet model",
+  },
+  {
+    id: "openrouter/deepseek/deepseek-v3.2",
+    name: "DeepSeek V3.2 (OpenRouter)",
+    provider: "openrouter",
+    description: "DeepSeek's advanced reasoning model",
+  },
   // Anthropic
   {
     id: "anthropic/claude-haiku-4.5",
