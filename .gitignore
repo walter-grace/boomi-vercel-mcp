@@ -57,10 +57,9 @@ yarn-error.log*
 # ============================================
 # SECRETS & CREDENTIALS
 # ============================================
-# API keys, tokens, secrets
+# API keys, tokens, secrets (but allow component files)
 *secret*
 *key*
-*password*
 *token*
 *credential*
 *.pem
@@ -68,10 +67,17 @@ yarn-error.log*
 *.p12
 *.pfx
 
+# Password files (but allow password protection components)
+*password*.ts
+*password*.tsx
+*password*.js
+*password*.jsx
+!components/password-protection*.tsx
+!components/*password*.tsx
+
 # But allow documentation/templates
 !*secret*.example
 !*key*.example
-!*password*.example
 !*token*.example
 !*credential*.example
 
