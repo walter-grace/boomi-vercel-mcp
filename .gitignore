@@ -51,11 +51,8 @@ yarn-error.log*
 .env.swo
 *.env~
 
-# Allow only template/example files
-!.env.example
-!.env.local.template
-!.env*.example
-!.env*.template
+# NO .env files should be committed - not even templates or examples
+# All .env files are excluded
 
 # ============================================
 # SECRETS & CREDENTIALS
