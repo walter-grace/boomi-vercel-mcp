@@ -28,18 +28,37 @@ export const chatModels: ChatModel[] = [
     provider: "anthropic",
     description: "Most capable Anthropic model",
   },
-  // OpenAI
+  // OpenAI (via Vercel AI Gateway)
   {
     id: "openai/gpt-4.1-mini",
-    name: "GPT-4.1 Mini",
+    name: "GPT-4.1 Mini (Gateway)",
     provider: "openai",
     description: "Fast and cost-effective for simple tasks",
   },
   {
     id: "openai/gpt-5.2",
-    name: "GPT-5.2",
+    name: "GPT-5.2 (Gateway)",
     provider: "openai",
     description: "Most capable OpenAI model",
+  },
+  // OpenAI Direct (bypasses gateway, uses OPENAI_API_KEY)
+  {
+    id: "openai-direct/gpt-4o",
+    name: "GPT-4o (Direct)",
+    provider: "openai",
+    description: "OpenAI GPT-4o via direct API",
+  },
+  {
+    id: "openai-direct/gpt-4o-mini",
+    name: "GPT-4o Mini (Direct)",
+    provider: "openai",
+    description: "Fast and affordable GPT-4o Mini",
+  },
+  {
+    id: "openai-direct/gpt-4-turbo",
+    name: "GPT-4 Turbo (Direct)",
+    provider: "openai",
+    description: "High-performance GPT-4 Turbo",
   },
   // Google
   {
@@ -73,13 +92,6 @@ export const chatModels: ChatModel[] = [
     name: "Grok Code Fast",
     provider: "reasoning",
     description: "Reasoning optimized for code",
-  },
-  // OpenRouter models with reasoning support
-  {
-    id: "openrouter/moonshotai/kimi-k2.5",
-    name: "Kimi K2.5 (OpenRouter)",
-    provider: "openrouter",
-    description: "Advanced reasoning model with extended thinking capabilities",
   },
 ];
 

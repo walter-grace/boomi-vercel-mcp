@@ -1,11 +1,11 @@
 import { gateway } from "@ai-sdk/gateway";
+import { openai } from "@ai-sdk/openai";
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from "ai";
 import { isTestEnvironment } from "../constants";
-// import { createOpenRouterModel } from "./providers/openrouter"; // Temporarily disabled
 
 const THINKING_SUFFIX_REGEX = /-thinking$/;
 
@@ -33,12 +33,12 @@ export function getLanguageModel(modelId: string) {
     return myProvider.languageModel(modelId);
   }
 
-  // Check if it's an OpenRouter model
-  // Temporarily disabled - needs proper LanguageModel implementation
-  // if (modelId.startsWith("openrouter/") || modelId.includes("openrouter")) {
-  //   const openRouterModelId = modelId.replace("openrouter/", "");
-  //   return createOpenRouterModel(openRouterModelId);
-  // }
+  // Check if it's a direct OpenAI model (bypasses gateway)
+  // Format: openai-direct/gpt-4o or openai-direct/gpt-4-turbo
+  if (modelId.startsWith("openai-direct/")) {
+    const openaiModelId = modelId.replace("openai-direct/", "");
+    return openai(openaiModelId);
+  }
 
   const isReasoningModel =
     modelId.includes("reasoning") || modelId.endsWith("-thinking");
@@ -52,6 +52,7 @@ export function getLanguageModel(modelId: string) {
     });
   }
 
+  // Use gateway for all other models (including openai/gpt-* models)
   return gateway.languageModel(modelId);
 }
 
