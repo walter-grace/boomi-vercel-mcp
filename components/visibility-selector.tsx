@@ -29,13 +29,13 @@ const visibilities: Array<{
     id: "private",
     label: "Private",
     description: "Only you can access this chat",
-    icon: <LockIcon />,
+    icon: <LockIcon size={16} />,
   },
   {
     id: "public",
     label: "Public",
     description: "Anyone with the link can access this chat",
-    icon: <GlobeIcon />,
+    icon: <GlobeIcon size={16} />,
   },
 ];
 
@@ -69,17 +69,19 @@ export function VisibilitySelector({
         )}
       >
         <Button
-          className="hidden h-8 md:flex md:h-fit md:px-2"
+          className="h-8 w-8 !p-0 !gap-0 sm:!h-8 sm:!w-auto sm:!px-2 sm:!gap-1.5 flex items-center justify-center shrink-0"
           data-testid="visibility-selector"
           variant="outline"
         >
-          {selectedVisibility?.icon}
-          <span className="md:sr-only">{selectedVisibility?.label}</span>
-          <ChevronDownIcon />
+          <span className="flex items-center justify-center size-4 sm:size-4">{selectedVisibility?.icon}</span>
+          <span className="hidden sm:inline md:sr-only">{selectedVisibility?.label}</span>
+          <span className="hidden sm:inline">
+            <ChevronDownIcon size={16} />
+          </span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent align="start" className="min-w-[280px] sm:min-w-[300px]">
         {visibilities.map((visibility) => (
           <DropdownMenuItem
             className="group/item flex flex-row items-center justify-between gap-4"

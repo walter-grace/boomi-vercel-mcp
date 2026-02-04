@@ -51,10 +51,10 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   ];
 
   return (
-    <div className="w-full space-y-4" data-testid="suggested-actions">
+    <div className="w-full space-y-3 sm:space-y-4" data-testid="suggested-actions">
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="text-sm font-medium text-muted-foreground"
+        className="text-xs sm:text-sm font-medium text-muted-foreground"
         exit={{ opacity: 0, y: 20 }}
         initial={{ opacity: 0, y: 20 }}
         transition={{ delay: 0.8 }}
@@ -71,7 +71,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
             transition={{ delay: 0.05 * index + 0.85 }}
           >
             <Suggestion
-              className="group h-auto w-full whitespace-normal p-4 text-left border-2 border-border hover:border-primary hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+              className="group h-auto w-full whitespace-normal p-3 sm:p-4 text-left border-2 border-border hover:border-primary hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
               onClick={(suggestion) => {
                 window.history.pushState({}, "", `/chat/${chatId}`);
                 sendMessage({
@@ -81,13 +81,13 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
               }}
               suggestion={action.text}
             >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl flex-shrink-0">{action.icon}</span>
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-xl sm:text-2xl flex-shrink-0">{action.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-primary mb-1">
+                  <div className="text-xs font-medium text-primary mb-0.5 sm:mb-1">
                     {action.category}
                   </div>
-                  <div className="text-sm text-foreground group-hover:text-primary transition-colors">
+                  <div className="text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors">
                     {action.text}
                   </div>
                 </div>

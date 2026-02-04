@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
+import { X } from "lucide-react";
 import { PlusIcon, TrashIcon } from "@/components/icons";
 import {
   getChatHistoryPaginationKey,
@@ -36,7 +37,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
-  const { setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
 

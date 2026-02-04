@@ -1,71 +1,239 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chat SDK</h1>
-</a>
+# Boomi Assistant
 
-<p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
-</p>
+<div align="center">
 
-<p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
-</p>
-<br/>
+**AI-Powered Chatbot for Boomi Platform Management**
 
-## Features
+[![Next.js](https://img.shields.io/badge/Next.js-16.0-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black)](https://vercel.com)
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://ai-sdk.dev/docs/introduction)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+Manage your Boomi integrations, processes, and trading partners with AI-powered assistance.
 
-## Model Providers
+</div>
 
-This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) to access multiple AI models through a unified interface. The default configuration includes [xAI](https://x.ai) models (`grok-2-vision-1212`, `grok-3-mini`) routed through the gateway.
+---
 
-### AI Gateway Authentication
+## 🚀 Features
 
-**For Vercel deployments**: Authentication is handled automatically via OIDC tokens.
+### Core Capabilities
+- **AI-Powered Chat Interface** - Natural language conversations with advanced AI models
+- **Boomi Platform Integration** - Direct integration with Boomi API for managing:
+  - Trading Partners (B2B/EDI)
+  - Process Components
+  - Organization Components
+  - Account Information
+  - Credential Profiles
+- **Multiple AI Models** - Support for 100+ models via OpenRouter including:
+  - GPT-4o, Claude 3.5 Sonnet
+  - Kimi K2.5 (Reasoning models)
+  - And many more
+- **Responsive Design** - Fully optimized for mobile and desktop
+- **Authentication** - Guest mode and registered user accounts
+- **Chat History** - Persistent chat sessions with public/private visibility
+- **Document Creation** - Create and manage documents/artifacts
+- **File Attachments** - Upload and process files in conversations
 
-**For non-Vercel deployments**: You need to provide an AI Gateway API key by setting the `AI_GATEWAY_API_KEY` environment variable in your `.env.local` file.
+### Boomi MCP Tools
+The app integrates with a Boomi MCP (Model Context Protocol) server providing 7 specialized tools:
 
-With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
+1. **`list_boomi_profiles`** - List all saved Boomi credential profiles
+2. **`set_boomi_credentials`** - Store Boomi API credentials securely
+3. **`delete_boomi_profile`** - Delete a stored credential profile
+4. **`boomi_account_info`** - Get Boomi account information
+5. **`manage_trading_partner`** - Manage B2B/EDI trading partners (CRUD operations)
+6. **`manage_process`** - Manage Boomi process components (CRUD operations)
+7. **`manage_organization`** - Manage Boomi organization components (CRUD operations)
 
-## Deploy Your Own
+## 🛠️ Tech Stack
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
+- **Framework**: [Next.js 16](https://nextjs.org) with App Router
+- **AI SDK**: [Vercel AI SDK](https://sdk.vercel.ai) for LLM integration
+- **UI Components**: [shadcn/ui](https://ui.shadcn.com) with [Radix UI](https://radix-ui.com)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com)
+- **Database**: [Neon PostgreSQL](https://neon.tech) (Serverless)
+- **File Storage**: [Vercel Blob](https://vercel.com/storage/blob)
+- **Authentication**: [NextAuth.js](https://authjs.dev) (Auth.js)
+- **AI Models**: [OpenRouter](https://openrouter.ai) for multi-provider access
+- **Type Safety**: TypeScript with strict mode
+- **Code Quality**: Biome (formatter & linter)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/templates/next.js/nextjs-ai-chatbot)
+## 📋 Prerequisites
 
-## Running locally
+- Node.js 18+ 
+- pnpm 9.12.3+ (or npm/yarn)
+- PostgreSQL database (Neon recommended)
+- OpenRouter API key (for AI models)
+- Boomi API credentials (optional, for Boomi features)
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+## 🚀 Getting Started
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
+### 1. Clone the Repository
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+```bash
+git clone https://github.com/walter-grace/vercel-boomi.git
+cd vercel-boomi
+```
+
+### 2. Install Dependencies
 
 ```bash
 pnpm install
-pnpm db:migrate # Setup database or apply latest database changes
+```
+
+### 3. Set Up Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+# Database
+POSTGRES_URL=your_postgres_connection_string
+
+# Authentication
+AUTH_SECRET=your_auth_secret_generate_with_openssl_rand_base64_32
+
+# AI Models (OpenRouter)
+OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+
+# Optional: Boomi MCP Server (defaults to Replit server)
+BOOMI_MCP_SERVER_URL=https://boomi-mcp-server-replitzip.replit.app/mcp
+
+# Optional: Vercel Blob (for file storage)
+BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+```
+
+**Important**: Never commit `.env.local` or any `.env` files. They are already excluded in `.gitignore`.
+
+### 4. Set Up Database
+
+```bash
+# Run database migrations
+pnpm db:migrate
+```
+
+### 5. Run Development Server
+
+```bash
 pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+Visit [http://localhost:3000](http://localhost:3000) to see the app.
+
+## 📚 Project Structure
+
+```
+vercel-boomi/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Authentication routes
+│   ├── (chat)/            # Chat interface routes
+│   └── api/               # API routes
+├── components/            # React components
+│   ├── ai-elements/      # AI-generated UI elements
+│   ├── elements/         # Reusable UI elements
+│   └── ui/               # shadcn/ui components
+├── lib/                   # Utility libraries
+│   ├── ai/               # AI SDK integration
+│   │   ├── mcp-client.ts # Boomi MCP client
+│   │   └── providers.ts  # AI model providers
+│   └── db/               # Database schema & migrations
+├── hooks/                 # React hooks
+├── docs/                  # Documentation
+└── public/                # Static assets
+```
+
+## 🔧 Configuration
+
+### AI Models
+
+The app uses OpenRouter to access 100+ AI models. Configure your preferred model in the chat interface dropdown.
+
+**Recommended Models:**
+- `moonshotai/kimi-k2.5` - Best for reasoning and complex tasks
+- `openrouter/openai/gpt-4o` - Fast and capable
+- `openrouter/anthropic/claude-3.5-sonnet` - Balanced performance
+
+### Boomi Integration
+
+1. Set up Boomi credentials in the chat:
+   ```
+   "Set up Boomi credentials for production profile"
+   ```
+
+2. Use Boomi tools:
+   ```
+   "List all trading partners"
+   "Create a new process called Order Processing"
+   "Show me account information"
+   ```
+
+## 🚢 Deployment
+
+### Deploy to Vercel
+
+1. **Push to GitHub** (this repository)
+2. **Import to Vercel**:
+   - Go to [Vercel Dashboard](https://vercel.com)
+   - Click "Add New Project"
+   - Import from GitHub: `walter-grace/vercel-boomi`
+3. **Configure Environment Variables** in Vercel:
+   - `POSTGRES_URL`
+   - `AUTH_SECRET`
+   - `OPENROUTER_API_KEY`
+   - `BOOMI_MCP_SERVER_URL` (optional)
+   - `BLOB_READ_WRITE_TOKEN` (optional)
+4. **Deploy** - Vercel will automatically deploy on every push to `main`
+
+### Manual Deployment
+
+```bash
+# Build the project
+pnpm build
+
+# Deploy to Vercel
+vercel --prod
+```
+
+## 📖 Documentation
+
+- [MCP Integration Guide](docs/MCP_INTEGRATION.md) - Boomi MCP server integration
+- [OpenRouter Integration](docs/OPENROUTER_INTEGRATION.md) - AI model configuration
+- [Authentication Setup](docs/AUTHENTICATION_SETUP.md) - Auth system details
+- [UI Improvements](docs/UI_IMPROVEMENTS.md) - UI/UX enhancements
+
+## 🔒 Security
+
+- **Environment Variables**: Never commit `.env` files
+- **API Keys**: Store all keys in Vercel Environment Variables for production
+- **Authentication**: Uses secure HTTP-only cookies
+- **Database**: Connection strings are encrypted in transit
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is private and proprietary. All rights reserved.
+
+## 🙏 Acknowledgments
+
+- Built on [Vercel AI SDK](https://sdk.vercel.ai)
+- UI components from [shadcn/ui](https://ui.shadcn.com)
+- Boomi Platform API integration
+- OpenRouter for AI model access
+
+## 📞 Support
+
+For issues or questions, please open an issue in this repository.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for Boomi Platform Management**
+
+</div>

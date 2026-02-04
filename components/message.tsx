@@ -59,20 +59,20 @@ const PurePreviewMessage = ({
       data-testid={`message-${message.role}`}
     >
       <div
-        className={cn("flex w-full items-start gap-2 md:gap-3", {
+        className={cn("flex w-full items-start gap-2 sm:gap-2.5 md:gap-3", {
           "justify-end": message.role === "user" && mode !== "edit",
           "justify-start": message.role === "assistant",
         })}
       >
         {message.role === "assistant" && (
-          <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+          <div className="-mt-1 flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
             <SparklesIcon size={14} />
           </div>
         )}
 
         <div
           className={cn("flex flex-col", {
-            "gap-2 md:gap-4": message.parts?.some(
+            "gap-2 sm:gap-3 md:gap-4": message.parts?.some(
               (p) => p.type === "text" && p.text?.trim()
             ),
             "w-full":
@@ -82,7 +82,7 @@ const PurePreviewMessage = ({
                 ) ||
                   message.parts?.some((p) => p.type.startsWith("tool-")))) ||
               mode === "edit",
-            "max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,80%)]":
+            "max-w-[calc(100%-2rem)] sm:max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,85%)] md:max-w-[min(fit-content,80%)]":
               message.role === "user" && mode !== "edit",
           })}
         >
@@ -128,9 +128,9 @@ const PurePreviewMessage = ({
                   <div key={key}>
                     <MessageContent
                       className={cn({
-                        "wrap-break-word w-fit rounded-2xl px-3 py-2 text-right text-white":
+                        "wrap-break-word w-fit rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 text-sm sm:text-base text-right text-white":
                           message.role === "user",
-                        "bg-transparent px-0 py-0 text-left":
+                        "bg-transparent px-0 py-0 text-sm sm:text-base text-left":
                           message.role === "assistant",
                       })}
                       data-testid="message-content"
@@ -370,15 +370,15 @@ export const ThinkingMessage = () => {
       data-role="assistant"
       data-testid="message-assistant-loading"
     >
-      <div className="flex items-start justify-start gap-3">
-        <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+      <div className="flex items-start justify-start gap-2 sm:gap-3">
+        <div className="-mt-1 flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
           <div className="animate-pulse">
             <SparklesIcon size={14} />
           </div>
         </div>
 
-        <div className="flex w-full flex-col gap-2 md:gap-4">
-          <div className="flex items-center gap-1 p-0 text-muted-foreground text-sm">
+        <div className="flex w-full flex-col gap-2 sm:gap-3 md:gap-4">
+          <div className="flex items-center gap-1 p-0 text-muted-foreground text-xs sm:text-sm">
             <span className="animate-pulse">Thinking</span>
             <span className="inline-flex">
               <span className="animate-bounce [animation-delay:0ms]">.</span>

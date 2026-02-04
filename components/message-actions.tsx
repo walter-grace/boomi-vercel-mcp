@@ -47,11 +47,11 @@ export function PureMessageActions({
   // User messages get edit (on hover) and copy actions
   if (message.role === "user") {
     return (
-      <Actions className="-mr-0.5 justify-end">
-        <div className="relative">
+      <Actions className="-mr-0.5 justify-end gap-0.5 sm:gap-1">
+        <div className="relative flex items-center gap-0.5 sm:gap-1">
           {setMode && (
             <Action
-              className="absolute top-0 -left-10 opacity-0 transition-opacity focus-visible:opacity-100 group-hover/message:opacity-100"
+              className="opacity-0 sm:opacity-0 transition-opacity focus-visible:opacity-100 group-hover/message:opacity-100 sm:absolute sm:top-0 sm:-left-10"
               data-testid="message-edit-button"
               onClick={() => setMode("edit")}
               tooltip="Edit"

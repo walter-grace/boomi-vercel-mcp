@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  maximumScale: 1, // Disable auto-zoom on mobile Safari
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5, // Allow zooming for accessibility
 };
 
 const geist = Geist({
