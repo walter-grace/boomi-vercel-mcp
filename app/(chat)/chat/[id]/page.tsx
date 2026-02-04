@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
+import { PasswordProtectionWrapper } from "@/components/password-protection-wrapper";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
 import { convertToUIMessages } from "@/lib/utils";
@@ -19,6 +20,17 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
 
 async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  
+  // Check password protection
+  const cookieStore = await cookies();
+  const demoAuth = cookieStore.get("demo-auth");
+  const DEMO_PASSWORD = process.env.DEMO_PASSWORD || "HICG";
+  const isAuthenticated = demoAuth?.value === DEMO_PASSWORD;
+
+  if (!isAuthenticated) {
+    return <PasswordProtectionWrapper />;
+  }
+
   const chat = await getChatById({ id });
 
   if (!chat) {
@@ -47,7 +59,6 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 
   const uiMessages = convertToUIMessages(messagesFromDb);
 
-  const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
 
   if (!chatModelFromCookie) {
