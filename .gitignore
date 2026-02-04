@@ -23,30 +23,76 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# ============================================
+# ENVIRONMENT FILES - NEVER COMMIT THESE
+# ============================================
+# Base .env files
+.env
+.env.*
 
-# local env files - NEVER COMMIT THESE
+# Local environment files (all variants)
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env*.local.bak
+.env*.local
+
+# Backup files
 .env*.bak
 .env.bak
-*.env
-*.env.*
+.env*.local.bak
+*.env.bak
+*.env.local.bak
+
+# Temporary env files
+.env.tmp
+.env.temp
+.env.swp
+.env.swo
+*.env~
+
+# Allow only template/example files
 !.env.example
 !.env.local.template
 !.env*.example
 !.env*.template
 
-# turbo
+# ============================================
+# SECRETS & CREDENTIALS
+# ============================================
+# API keys, tokens, secrets
+*secret*
+*key*
+*password*
+*token*
+*credential*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# But allow documentation/templates
+!*secret*.example
+!*key*.example
+!*password*.example
+!*token*.example
+!*credential*.example
+
+# ============================================
+# VERCEL & DEPLOYMENT
+# ============================================
+.vercel
+.vercel.json.local
+.vercel.local
+
+# ============================================
+# TURBO
+# ============================================
 .turbo
 
-.env
-.vercel
-.env*.local
-
-# Playwright
+# ============================================
+# PLAYWRIGHT
+# ============================================
 /test-results/
 /playwright-report/
 /blob-report/
