@@ -1,8 +1,8 @@
-// Default to OpenRouter if available (single API key for 100+ models!)
+// Default to Kimi K2.5 via OpenRouter if available (reasoning model with extended thinking)
 // Otherwise fallback to OpenAI Direct
 export const DEFAULT_CHAT_MODEL =
   typeof process !== "undefined" && process.env.OPENROUTER_API_KEY
-    ? "openrouter/openai/gpt-4o-mini"
+    ? "openrouter/moonshotai/kimi-k2.5"
     : "openai-direct/gpt-4o-mini";
 
 export type ChatModel = {
