@@ -8,28 +8,39 @@ export const textDocumentHandler = createDocumentHandler<"text">({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = "";
 
-    const { fullStream } = streamText({
-      model: getArtifactModel(),
-      system:
-        "Write about the given topic. Markdown is supported. Use headings wherever appropriate.",
-      experimental_transform: smoothStream({ chunking: "word" }),
-      prompt: title,
-    });
+    try {
+      console.log("[Text] Creating document with title:", title);
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
+      const { fullStream } = streamText({
+        model: getArtifactModel(),
+        system:
+          "Write about the given topic. Markdown is supported. Use headings wherever appropriate.",
+        experimental_transform: smoothStream({ chunking: "word" }),
+        prompt: title,
+      });
 
-      if (type === "text-delta") {
-        const { text } = delta;
+      for await (const delta of fullStream) {
+        const { type } = delta;
 
-        draftContent += text;
+        if (type === "text-delta") {
+          const { text } = delta;
 
-        dataStream.write({
-          type: "data-textDelta",
-          data: text,
-          transient: true,
-        });
+          draftContent += text;
+
+          dataStream.write({
+            type: "data-textDelta",
+            data: text,
+            transient: true,
+          });
+        }
       }
+
+      console.log(
+        "[Text] Generated content length:",
+        draftContent.length,
+      );
+    } catch (error) {
+      console.error("[Text] Error generating document content:", error);
     }
 
     return draftContent;

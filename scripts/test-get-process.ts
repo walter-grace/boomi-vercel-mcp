@@ -29,9 +29,9 @@ async function testGetProcess() {
 
     const profileName = process.env.BOOMI_PROFILE_NAME || "production";
     const processId = "1e5efba1-d398-4420-97e2-29da11685980"; // Demo_Training_MLLP_HL7_Example
-    
+
     console.log(`   Profile: ${profileName}`);
-    console.log(`   Action: get`);
+    console.log("   Action: get");
     console.log(`   Process ID: ${processId}`);
     console.log("   Calling tool...\n");
 
@@ -46,11 +46,18 @@ async function testGetProcess() {
       console.log("   ⚠️  Tool returned an error:");
       console.log(`      ${result.error}`);
       console.log("");
-      
+
       // Check if it's the same server-side bug
-      if (typeof result.error === "string" && result.error.includes("missing 1 required positional argument")) {
-        console.log("   🔍 This is the same server-side bug as the 'list' action.");
-        console.log("   The server is not receiving the 'action' parameter correctly.");
+      if (
+        typeof result.error === "string" &&
+        result.error.includes("missing 1 required positional argument")
+      ) {
+        console.log(
+          "   🔍 This is the same server-side bug as the 'list' action."
+        );
+        console.log(
+          "   The server is not receiving the 'action' parameter correctly."
+        );
       }
     } else {
       console.log("   ✅ Tool executed successfully!");
@@ -64,19 +71,27 @@ async function testGetProcess() {
         if (processData && typeof processData === "object") {
           console.log("   📋 Process Details:");
           if (processData.name || processData.componentName) {
-            console.log(`      Name: ${processData.name || processData.componentName}`);
+            console.log(
+              `      Name: ${processData.name || processData.componentName}`
+            );
           }
           if (processData.component_id || processData.id) {
-            console.log(`      ID: ${processData.component_id || processData.id}`);
+            console.log(
+              `      ID: ${processData.component_id || processData.id}`
+            );
           }
           if (processData.folder_name || processData.folderName) {
-            console.log(`      Folder: ${processData.folder_name || processData.folderName}`);
+            console.log(
+              `      Folder: ${processData.folder_name || processData.folderName}`
+            );
           }
           if (processData.version) {
             console.log(`      Version: ${processData.version}`);
           }
           if (processData.created_date || processData.createdDate) {
-            console.log(`      Created: ${processData.created_date || processData.createdDate}`);
+            console.log(
+              `      Created: ${processData.created_date || processData.createdDate}`
+            );
           }
         }
       }
@@ -100,4 +115,3 @@ async function testGetProcess() {
 }
 
 testGetProcess().catch(console.error);
-

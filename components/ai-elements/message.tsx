@@ -303,6 +303,26 @@ export const MessageBranchPage = ({
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
+/**
+ * Fallback for Mermaid diagrams when the CDN can't be reached.
+ * Shows the raw diagram code instead of an error.
+ */
+function MermaidFallback({
+  chart,
+}: {
+  error: string;
+  chart: string;
+  retry: () => void;
+}) {
+  return (
+    <div className="rounded-md border border-border bg-muted/50 p-3">
+      <pre className="overflow-x-auto text-xs whitespace-pre-wrap">
+        <code>{chart}</code>
+      </pre>
+    </div>
+  );
+}
+
 export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
     <Streamdown
@@ -310,6 +330,7 @@ export const MessageResponse = memo(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
+      mermaid={{ errorComponent: MermaidFallback }}
       {...props}
     />
   ),

@@ -1,5 +1,3 @@
-import { gateway } from "@ai-sdk/gateway";
-import { openai } from "@ai-sdk/openai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import {
   customProvider,
@@ -8,27 +6,21 @@ import {
 } from "ai";
 import { isTestEnvironment } from "../constants";
 
-const THINKING_SUFFIX_REGEX = /-thinking$/;
-
 // Lazy initialization of OpenRouter provider to ensure env vars are loaded
 function getOpenRouterProvider() {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  
+
   if (!apiKey) {
-    console.log("[Provider] ⚠️ OPENROUTER_API_KEY not found in environment");
-    return null;
+    throw new Error(
+      "OPENROUTER_API_KEY not found. All models require an OpenRouter API key. Please set it in your environment variables.",
+    );
   }
-  
-  // Debug: Log API key status (masked)
-  const maskedKey = apiKey.length > 10 
-    ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`
-    : "***";
-  console.log(`[Provider] ✅ OpenRouter API key found: ${maskedKey} (length: ${apiKey.length})`);
-  
+
   return createOpenRouter({
     apiKey,
     headers: {
-      "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
+      "HTTP-Referer":
+        process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
       "X-Title": process.env.OPENROUTER_APP_NAME || "Boomi Chatbot",
     },
   });
@@ -58,66 +50,42 @@ export function getLanguageModel(modelId: string) {
     return myProvider.languageModel(modelId);
   }
 
-  // Check if it's an OpenRouter model
-  // Format: openrouter/openai/gpt-4o or openrouter/anthropic/claude-3.5-sonnet
-  if (modelId.startsWith("openrouter/")) {
-    const openrouter = getOpenRouterProvider();
-    if (!openrouter) {
-      console.error("[Provider] ❌ OpenRouter provider not available - API key missing");
-      throw new Error(
-        "OpenRouter API key not found. Please set OPENROUTER_API_KEY in your environment variables."
-      );
-    }
-    const openrouterModelId = modelId.replace("openrouter/", "");
-    console.log(`[Provider] Using OpenRouter model: ${openrouterModelId}`);
-    console.log(`[Provider] API key present: ${!!process.env.OPENROUTER_API_KEY}`);
-    return openrouter(openrouterModelId);
-  }
+  const openrouter = getOpenRouterProvider();
 
-  // Check if it's a direct OpenAI model (bypasses gateway)
-  // Format: openai-direct/gpt-4o or openai-direct/gpt-4-turbo
-  if (modelId.startsWith("openai-direct/")) {
-    const openaiModelId = modelId.replace("openai-direct/", "");
-    console.log(`[Provider] Using direct OpenAI model: ${openaiModelId}`);
-    return openai(openaiModelId);
-  }
+  // All models should have the openrouter/ prefix
+  // Strip it to get the actual model ID for the OpenRouter API
+  const openrouterModelId = modelId.startsWith("openrouter/")
+    ? modelId.replace("openrouter/", "")
+    : modelId;
 
+  // Check if this is a reasoning/thinking model
   const isReasoningModel =
-    modelId.includes("reasoning") || modelId.endsWith("-thinking");
+    openrouterModelId.includes("reasoning") ||
+    openrouterModelId.endsWith("-thinking");
 
   if (isReasoningModel) {
-    const gatewayModelId = modelId.replace(THINKING_SUFFIX_REGEX, "");
-
+    const baseModelId = openrouterModelId.replace(/-thinking$/, "");
     return wrapLanguageModel({
-      model: gateway.languageModel(gatewayModelId),
+      model: openrouter(baseModelId),
       middleware: extractReasoningMiddleware({ tagName: "thinking" }),
     });
   }
 
-  // Use gateway for all other models (including openai/gpt-* models)
-  return gateway.languageModel(modelId);
+  return openrouter(openrouterModelId);
 }
 
 export function getTitleModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  // Use OpenRouter if available, otherwise fallback to gateway
   const openrouter = getOpenRouterProvider();
-  if (openrouter) {
-    return openrouter("openai/gpt-4o-mini");
-  }
-  return gateway.languageModel("google/gemini-2.5-flash-lite");
+  return openrouter("openai/gpt-4o-mini");
 }
 
 export function getArtifactModel() {
   if (isTestEnvironment && myProvider) {
     return myProvider.languageModel("artifact-model");
   }
-  // Use OpenRouter if available, otherwise fallback to gateway
   const openrouter = getOpenRouterProvider();
-  if (openrouter) {
-    return openrouter("anthropic/claude-3.5-sonnet");
-  }
-  return gateway.languageModel("anthropic/claude-haiku-4.5");
+  return openrouter("anthropic/claude-sonnet-4");
 }

@@ -1,18 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 
 const DEMO_PASSWORD = "HICG";
 
-export function PasswordProtection({
-  onSuccess,
-}: {
-  onSuccess: () => void;
-}) {
+export function PasswordProtection({ onSuccess }: { onSuccess: () => void }) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +41,7 @@ export function PasswordProtection({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -75,4 +71,3 @@ export function PasswordProtection({
     </div>
   );
 }
-

@@ -23,7 +23,7 @@ async function testChatAPI() {
   // Step 2: Send a message
   console.log("2️⃣ Sending message to /api/chat...");
   console.log(`   Message: "${TEST_MESSAGE}"`);
-  console.log(`   Model: openai-direct/gpt-4o-mini`);
+  console.log("   Model: openai-direct/gpt-4o-mini");
   console.log("");
 
   try {
@@ -44,7 +44,7 @@ async function testChatAPI() {
     });
 
     console.log(`   Status: ${response.status} ${response.statusText}`);
-    console.log(`   Headers:`, Object.fromEntries(response.headers.entries()));
+    console.log("   Headers:", Object.fromEntries(response.headers.entries()));
     console.log("");
 
     if (!response.ok) {
@@ -88,7 +88,7 @@ async function testChatAPI() {
 
           chunkCount++;
           const chunk = decoder.decode(value, { stream: true });
-          
+
           // Parse SSE format
           const lines = chunk.split("\n");
           for (const line of lines) {
@@ -98,13 +98,19 @@ async function testChatAPI() {
                 hasData = true;
                 try {
                   const parsed = JSON.parse(data);
-                  console.log(`   📦 Chunk ${chunkCount}:`, JSON.stringify(parsed).slice(0, 200));
-                  
+                  console.log(
+                    `   📦 Chunk ${chunkCount}:`,
+                    JSON.stringify(parsed).slice(0, 200)
+                  );
+
                   // Extract text content
                   if (parsed.type === "text-delta" && parsed.textDelta) {
                     fullText += parsed.textDelta;
                   }
-                  if (parsed.type === "tool-call" || parsed.type === "tool-result") {
+                  if (
+                    parsed.type === "tool-call" ||
+                    parsed.type === "tool-result"
+                  ) {
                     console.log(`   🔧 Tool: ${parsed.toolName || "unknown"}`);
                   }
                 } catch (e) {
@@ -122,7 +128,9 @@ async function testChatAPI() {
         if (hasData) {
           console.log("   ✅ Stream contains data!");
           if (fullText) {
-            console.log(`   📄 Full text received: ${fullText.length} characters`);
+            console.log(
+              `   📄 Full text received: ${fullText.length} characters`
+            );
             console.log(`   Preview: ${fullText.slice(0, 200)}...`);
           }
         } else {
@@ -153,4 +161,3 @@ async function testChatAPI() {
 
 // Run the test
 testChatAPI().catch(console.error);
-

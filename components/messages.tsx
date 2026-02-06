@@ -15,6 +15,7 @@ type MessagesProps = {
   messages: ChatMessage[];
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
   isReadonly: boolean;
   isArtifactVisible: boolean;
   selectedModelId: string;
@@ -28,6 +29,7 @@ function PureMessages({
   messages,
   setMessages,
   regenerate,
+  sendMessage,
   isReadonly,
   selectedModelId: _selectedModelId,
 }: MessagesProps) {
@@ -51,38 +53,59 @@ function PureMessages({
       >
         <div className="mx-auto flex min-w-0 max-w-4xl flex-col gap-3 px-2 py-3 sm:gap-4 sm:px-3 sm:py-4 md:gap-6 md:px-4">
           {(() => {
-            console.log("[UI] Messages component render - messages count:", messages.length);
-            console.log("[UI] Messages:", messages.map(m => ({ id: m.id, role: m.role, partsCount: m.parts?.length || 0 })));
+            console.log(
+              "[UI] Messages component render - messages count:",
+              messages.length
+            );
+            console.log(
+              "[UI] Messages:",
+              messages.map((m) => ({
+                id: m.id,
+                role: m.role,
+                partsCount: m.parts?.length || 0,
+              }))
+            );
             return null;
           })()}
-          
-          {messages.length === 0 && <Greeting />}
 
-          {messages.map((message, index) => {
-            console.log(`[UI] Rendering message ${index}:`, { id: message.id, role: message.role, parts: message.parts?.length || 0 });
-            return (
-            <PreviewMessage
-              addToolApprovalResponse={addToolApprovalResponse}
-              chatId={chatId}
-              isLoading={
-                status === "streaming" && messages.length - 1 === index
+          {messages.length === 0 && (
+            <Greeting chatId={chatId} sendMessage={sendMessage} />
+          )}
+
+          {(() => {
+            // Find the index of the last assistant message (computed once)
+            let lastAssistantIndex = -1;
+            for (let i = messages.length - 1; i >= 0; i--) {
+              if (messages.at(i)?.role === "assistant") {
+                lastAssistantIndex = i;
+                break;
               }
-              isReadonly={isReadonly}
-              key={message.id}
-              message={message}
-              regenerate={regenerate}
-              requiresScrollPadding={
-                hasSentMessage && index === messages.length - 1
-              }
-              setMessages={setMessages}
-              vote={
-                votes
-                  ? votes.find((vote) => vote.messageId === message.id)
-                  : undefined
-              }
-            />
-            );
-          })}
+            }
+            return messages.map((message, index) => (
+              <PreviewMessage
+                addToolApprovalResponse={addToolApprovalResponse}
+                chatId={chatId}
+                isLastAssistantMessage={index === lastAssistantIndex}
+                isLoading={
+                  status === "streaming" && messages.length - 1 === index
+                }
+                isReadonly={isReadonly}
+                key={message.id}
+                message={message}
+                regenerate={regenerate}
+                requiresScrollPadding={
+                  hasSentMessage && index === messages.length - 1
+                }
+                sendMessage={sendMessage}
+                setMessages={setMessages}
+                vote={
+                  votes
+                    ? votes.find((vote) => vote.messageId === message.id)
+                    : undefined
+                }
+              />
+            ));
+          })()}
 
           {status === "submitted" &&
             !messages.some((msg) =>

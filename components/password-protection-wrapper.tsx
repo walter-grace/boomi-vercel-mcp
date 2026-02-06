@@ -1,8 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PasswordProtection } from "./password-protection";
-import { useRouter } from "next/navigation";
 
 export function PasswordProtectionWrapper() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,4 +45,3 @@ export function PasswordProtectionWrapper() {
 
   return null;
 }
-

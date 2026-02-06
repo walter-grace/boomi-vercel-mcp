@@ -142,7 +142,7 @@ export function Chat({
       console.error("[UI] Error type:", error?.constructor?.name);
       console.error("[UI] Error message:", error?.message);
       console.error("[UI] Error stack:", error?.stack);
-      
+
       if (error instanceof ChatSDKError) {
         console.log("[UI] ChatSDKError detected");
         if (
@@ -215,6 +215,7 @@ export function Chat({
           isReadonly={isReadonly}
           messages={messages}
           regenerate={regenerate}
+          sendMessage={sendMessage}
           selectedModelId={initialChatModel}
           setMessages={setMessages}
           status={status}

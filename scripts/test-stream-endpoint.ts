@@ -53,7 +53,6 @@ async function testStreamEndpoint() {
     console.log("   2. Check terminal for [Chat] logs");
     console.log("   3. Look for '[Chat] Starting stream merge...' in terminal");
     console.log("   4. Look for '[UI] Chat response received' in browser");
-    
   } catch (error) {
     console.error("");
     console.error("❌ Test failed:", error);
@@ -64,4 +63,3 @@ async function testStreamEndpoint() {
 }
 
 testStreamEndpoint().catch(console.error);
-

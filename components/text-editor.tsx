@@ -40,11 +40,15 @@ function PureEditor({
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
+  const initializedWithContent = useRef(false);
 
   useEffect(() => {
     if (containerRef.current && !editorRef.current) {
+      const initialContent = content || "";
+      initializedWithContent.current = !!initialContent.trim();
+      
       const state = EditorState.create({
-        doc: buildDocumentFromContent(content),
+        doc: buildDocumentFromContent(initialContent),
         plugins: [
           ...exampleSetup({ schema: documentSchema, menuBar: false }),
           inputRules({
@@ -70,10 +74,54 @@ function PureEditor({
       if (editorRef.current) {
         editorRef.current.destroy();
         editorRef.current = null;
+        initializedWithContent.current = false;
       }
     };
     // NOTE: we only want to run this effect once
     // eslint-disable-next-line
+  }, []);
+
+  // Force re-initialization if content loads after editor was created empty
+  useEffect(() => {
+    if (
+      editorRef.current &&
+      containerRef.current &&
+      content &&
+      content.trim() &&
+      !initializedWithContent.current
+    ) {
+      // Destroy and recreate editor with content
+      editorRef.current.destroy();
+      editorRef.current = null;
+
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        if (containerRef.current) {
+          const state = EditorState.create({
+            doc: buildDocumentFromContent(content),
+            plugins: [
+              ...exampleSetup({ schema: documentSchema, menuBar: false }),
+              inputRules({
+                rules: [
+                  headingRule(1),
+                  headingRule(2),
+                  headingRule(3),
+                  headingRule(4),
+                  headingRule(5),
+                  headingRule(6),
+                ],
+              }),
+              suggestionsPlugin,
+            ],
+          });
+
+          editorRef.current = new EditorView(containerRef.current, {
+            state,
+          });
+          initializedWithContent.current = true;
+        }
+      }, 0);
+    }
   }, [content]);
 
   useEffect(() => {
@@ -91,12 +139,29 @@ function PureEditor({
   }, [onSaveContent]);
 
   useEffect(() => {
-    if (editorRef.current && content) {
+    if (editorRef.current && content !== undefined) {
       const currentContent = buildContentFromDocument(
         editorRef.current.state.doc
       );
 
-      if (status === "streaming") {
+      // Normalize both contents for comparison (trim whitespace)
+      const normalizedCurrent = currentContent.trim();
+      const normalizedNew = (content || "").trim();
+
+
+      // Check if editor was initialized empty but now we have content
+      const wasEmptyAndNowHasContent = 
+        !initializedWithContent.current && normalizedNew;
+
+      // Always update if content is provided and different
+      // Or if editor is empty/whitespace and we have actual content
+      const shouldUpdate = 
+        normalizedNew && 
+        (normalizedCurrent !== normalizedNew || 
+         (!normalizedCurrent && normalizedNew) ||
+         wasEmptyAndNowHasContent);
+
+      if (status === "streaming" && content) {
         const newDocument = buildDocumentFromContent(content);
 
         const transaction = editorRef.current.state.tr.replaceWith(
@@ -107,20 +172,56 @@ function PureEditor({
 
         transaction.setMeta("no-save", true);
         editorRef.current.dispatch(transaction);
+        initializedWithContent.current = true;
         return;
       }
 
-      if (currentContent !== content) {
-        const newDocument = buildDocumentFromContent(content);
+      if (shouldUpdate) {
+        try {
+          const newDocument = buildDocumentFromContent(content);
 
-        const transaction = editorRef.current.state.tr.replaceWith(
-          0,
-          editorRef.current.state.doc.content.size,
-          newDocument.content
-        );
+          // Always use replaceWith transaction - it's more reliable
+          const docSize = editorRef.current.state.doc.content.size;
+          const transaction = editorRef.current.state.tr.replaceWith(
+            0,
+            docSize,
+            newDocument.content
+          );
 
-        transaction.setMeta("no-save", true);
-        editorRef.current.dispatch(transaction);
+          transaction.setMeta("no-save", true);
+          editorRef.current.dispatch(transaction);
+          initializedWithContent.current = true;
+        } catch (error) {
+          console.error("Error updating editor content:", error);
+          // Fallback: try to recreate the editor
+          if (containerRef.current && editorRef.current) {
+            editorRef.current.destroy();
+            editorRef.current = null;
+            
+            const state = EditorState.create({
+              doc: buildDocumentFromContent(content),
+              plugins: [
+                ...exampleSetup({ schema: documentSchema, menuBar: false }),
+                inputRules({
+                  rules: [
+                    headingRule(1),
+                    headingRule(2),
+                    headingRule(3),
+                    headingRule(4),
+                    headingRule(5),
+                    headingRule(6),
+                  ],
+                }),
+                suggestionsPlugin,
+              ],
+            });
+
+            editorRef.current = new EditorView(containerRef.current, {
+              state,
+            });
+            initializedWithContent.current = true;
+          }
+        }
       }
     }
   }, [content, status]);
@@ -151,12 +252,16 @@ function PureEditor({
 }
 
 function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
+  // Always re-render if content changes (even if string reference is same, content might have loaded)
+  if (prevProps.content !== nextProps.content) {
+    return false;
+  }
+  
   return (
     prevProps.suggestions === nextProps.suggestions &&
     prevProps.currentVersionIndex === nextProps.currentVersionIndex &&
     prevProps.isCurrentVersion === nextProps.isCurrentVersion &&
     !(prevProps.status === "streaming" && nextProps.status === "streaming") &&
-    prevProps.content === nextProps.content &&
     prevProps.onSaveContent === nextProps.onSaveContent
   );
 }

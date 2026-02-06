@@ -1,13 +1,14 @@
 #!/usr/bin/env tsx
+
 /**
  * Test LLM and MCP server integration
  * Simulates a chat interaction where LLM calls MCP tools
  */
 
-import { config } from "dotenv";
 import { streamText } from "ai";
-import { getLanguageModel } from "../lib/ai/providers";
+import { config } from "dotenv";
 import { getBoomiMCPTools } from "../lib/ai/mcp-client";
+import { getLanguageModel } from "../lib/ai/providers";
 import { getWeather } from "../lib/ai/tools/get-weather";
 
 config({ path: ".env.local" });
@@ -62,7 +63,7 @@ async function testLLMMCPIntegration() {
     });
 
     let fullText = "";
-    let toolCalls = 0;
+    const toolCalls = 0;
 
     for await (const chunk of result.textStream) {
       process.stdout.write(chunk);
@@ -80,7 +81,9 @@ async function testLLMMCPIntegration() {
         console.log(`      • ${call.toolName}`);
       });
     } else {
-      console.log("   ⚠️  No tool calls detected (LLM may have answered directly)");
+      console.log(
+        "   ⚠️  No tool calls detected (LLM may have answered directly)"
+      );
     }
 
     console.log("");
@@ -157,7 +160,9 @@ async function testLLMMCPIntegration() {
 
     const toolResults = await result;
     if (toolResults.toolCalls && toolResults.toolCalls.length > 0) {
-      console.log(`   ✅ Tools called: ${toolResults.toolCalls.length} time(s)`);
+      console.log(
+        `   ✅ Tools called: ${toolResults.toolCalls.length} time(s)`
+      );
       toolResults.toolCalls.forEach((call) => {
         console.log(`      • ${call.toolName}`);
       });
@@ -184,4 +189,3 @@ testLLMMCPIntegration().catch((error) => {
   console.error("Fatal error:", error);
   process.exit(1);
 });
-

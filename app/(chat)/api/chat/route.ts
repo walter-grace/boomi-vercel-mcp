@@ -14,6 +14,7 @@ import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
 import { getBoomiMCPTools } from "@/lib/ai/mcp-client";
+import { getUserBoomiCredentials } from "@/lib/db/queries";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
@@ -141,9 +142,21 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
-    // Get Boomi MCP tools
+    // Get user's Boomi credentials if available
+    const userBoomiCreds = await getUserBoomiCredentials(session.user.id);
+
+    // Get Boomi MCP tools (with user credentials if available)
     console.log("[Chat] Fetching Boomi MCP tools...");
-    const boomiMCPTools = await getBoomiMCPTools();
+    const boomiMCPTools = await getBoomiMCPTools(
+      userBoomiCreds
+        ? {
+            accountId: userBoomiCreds.accountId,
+            username: userBoomiCreds.username,
+            apiToken: userBoomiCreds.apiToken,
+            profileName: userBoomiCreds.profileName,
+          }
+        : undefined // Falls back to env vars if not set
+    );
     const mcpToolNames = Object.keys(boomiMCPTools);
     console.log(`[Chat] ✅ MCP Tools loaded: ${mcpToolNames.length} tools`);
     if (mcpToolNames.length > 0) {

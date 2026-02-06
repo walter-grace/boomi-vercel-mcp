@@ -29,7 +29,9 @@ const runMigrate = async () => {
 runMigrate().catch((err) => {
   if (err.code === "ECONNREFUSED" || err.message?.includes("ECONNREFUSED")) {
     console.log("⏭️  Database connection refused, skipping migrations");
-    console.log("   (This is normal if database is not available during build)");
+    console.log(
+      "   (This is normal if database is not available during build)"
+    );
     process.exit(0);
   }
   console.error("❌ Migration failed");

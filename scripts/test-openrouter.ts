@@ -1,11 +1,12 @@
 #!/usr/bin/env tsx
+
 /**
  * Test OpenRouter integration
  */
 
-import { config } from "dotenv";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
@@ -33,7 +34,8 @@ async function testOpenRouter() {
   const openrouter = createOpenRouter({
     apiKey,
     headers: {
-      "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
+      "HTTP-Referer":
+        process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
       "X-Title": process.env.OPENROUTER_APP_NAME || "Boomi Chatbot",
     },
   });
@@ -49,7 +51,10 @@ async function testOpenRouter() {
     console.log(`   Response: ${result.text}`);
     console.log("");
   } catch (error) {
-    console.error("   ❌ Failed:", error instanceof Error ? error.message : error);
+    console.error(
+      "   ❌ Failed:",
+      error instanceof Error ? error.message : error
+    );
     console.log("");
   }
 
@@ -64,7 +69,10 @@ async function testOpenRouter() {
     console.log(`   Response: ${result.text}`);
     console.log("");
   } catch (error) {
-    console.error("   ❌ Failed:", error instanceof Error ? error.message : error);
+    console.error(
+      "   ❌ Failed:",
+      error instanceof Error ? error.message : error
+    );
     console.log("");
   }
 
@@ -79,7 +87,10 @@ async function testOpenRouter() {
     console.log(`   Response: ${result.text}`);
     console.log("");
   } catch (error) {
-    console.error("   ❌ Failed:", error instanceof Error ? error.message : error);
+    console.error(
+      "   ❌ Failed:",
+      error instanceof Error ? error.message : error
+    );
     console.log("");
   }
 
@@ -98,4 +109,3 @@ async function testOpenRouter() {
 }
 
 testOpenRouter().catch(console.error);
-

@@ -1,11 +1,12 @@
 #!/usr/bin/env tsx
+
 /**
  * Test Kimi K2.5 reasoning model via OpenRouter
  */
 
-import { config } from "dotenv";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
@@ -33,19 +34,22 @@ async function testKimiReasoning() {
   const openrouter = createOpenRouter({
     apiKey,
     headers: {
-      "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
+      "HTTP-Referer":
+        process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
       "X-Title": process.env.OPENROUTER_APP_NAME || "Boomi Chatbot",
     },
   });
 
   const modelId = "moonshotai/kimi-k2.5";
   console.log(`📦 Model: ${modelId}`);
-  console.log("💡 This is a reasoning model with extended thinking capabilities");
+  console.log(
+    "💡 This is a reasoning model with extended thinking capabilities"
+  );
   console.log("");
 
   // Test 1: Simple reasoning question
   console.log("1️⃣ Testing simple reasoning...");
-  console.log('   Prompt: "How many r\'s are in the word \'strawberry\'?"');
+  console.log("   Prompt: \"How many r's are in the word 'strawberry'?\"");
   console.log("");
 
   try {
@@ -72,7 +76,7 @@ async function testKimiReasoning() {
         console.error("      • Check: https://openrouter.ai/keys");
       } else if (error.message.includes("model not found")) {
         console.error("   💡 Model might not be available or ID is incorrect");
-        console.error(`      Check: https://openrouter.ai/models`);
+        console.error("      Check: https://openrouter.ai/models");
       }
     } else {
       console.error(`   Unknown error: ${error}`);
@@ -82,14 +86,17 @@ async function testKimiReasoning() {
 
   // Test 2: Math reasoning
   console.log("2️⃣ Testing math reasoning...");
-  console.log('   Prompt: "If a train travels 60 mph for 2.5 hours, how far does it go?"');
+  console.log(
+    '   Prompt: "If a train travels 60 mph for 2.5 hours, how far does it go?"'
+  );
   console.log("");
 
   try {
     const startTime = Date.now();
     const result = await generateText({
       model: openrouter(modelId),
-      prompt: "If a train travels 60 mph for 2.5 hours, how far does it go? Show your reasoning.",
+      prompt:
+        "If a train travels 60 mph for 2.5 hours, how far does it go? Show your reasoning.",
     });
     const duration = Date.now() - startTime;
 
@@ -110,12 +117,15 @@ async function testKimiReasoning() {
   console.log("=".repeat(60));
   console.log("✅ Testing completed!");
   console.log("");
-  console.log("💡 Kimi K2.5 is a reasoning model that shows extended thinking.");
-  console.log("   It's great for complex problems that require step-by-step reasoning.");
+  console.log(
+    "💡 Kimi K2.5 is a reasoning model that shows extended thinking."
+  );
+  console.log(
+    "   It's great for complex problems that require step-by-step reasoning."
+  );
   console.log("");
   console.log("📝 Available in chat as: 'Kimi K2.5 (OpenRouter)'");
   console.log("");
 }
 
 testKimiReasoning().catch(console.error);
-

@@ -58,7 +58,9 @@ async function inspectServer() {
       if (profilesText) {
         const profiles = JSON.parse(profilesText);
         console.log("   Current profiles:", profiles);
-        console.log(`   ✅ Found ${profiles.profiles?.length || 0} profile(s)\n`);
+        console.log(
+          `   ✅ Found ${profiles.profiles?.length || 0} profile(s)\n`
+        );
       }
     } catch (error) {
       console.log("   ⚠️  Could not list profiles:", error);
@@ -129,11 +131,16 @@ async function inspectServer() {
           profile: "test-user-1",
         },
       });
-      console.log("   ✅ Tool call succeeded (may fail if credentials are invalid)");
+      console.log(
+        "   ✅ Tool call succeeded (may fail if credentials are invalid)"
+      );
       const resultText = JSON.stringify(result1, null, 2);
       console.log("   Result:", resultText.substring(0, 300));
     } catch (error) {
-      console.log("   ⚠️  Tool call failed (expected if test credentials are invalid):", error);
+      console.log(
+        "   ⚠️  Tool call failed (expected if test credentials are invalid):",
+        error
+      );
     }
 
     // 6. Test error handling for non-existent profile
@@ -145,7 +152,9 @@ async function inspectServer() {
           profile: "non-existent-profile-xyz",
         },
       });
-      console.log("   ⚠️  Tool call succeeded (unexpected - should have failed)");
+      console.log(
+        "   ⚠️  Tool call succeeded (unexpected - should have failed)"
+      );
     } catch (error) {
       console.log("   ✅ Tool call failed as expected (profile doesn't exist)");
       console.log(`   Error: ${error}`);
@@ -157,14 +166,15 @@ async function inspectServer() {
       const toolsResult = await callMCP("tools/list", {});
       const tools = toolsResult?.tools || [];
       console.log(`   Found ${tools.length} tools:\n`);
-      
+
       tools.forEach((tool: any) => {
         console.log(`   📋 ${tool.name}`);
         console.log(`      Description: ${tool.description}`);
         if (tool.inputSchema?.properties) {
           const props = tool.inputSchema.properties;
           const hasProfile = "profile" in props;
-          const profileRequired = tool.inputSchema.required?.includes("profile");
+          const profileRequired =
+            tool.inputSchema.required?.includes("profile");
           console.log(`      Has 'profile' parameter: ${hasProfile}`);
           console.log(`      'profile' is required: ${profileRequired}`);
         }
@@ -185,7 +195,9 @@ async function inspectServer() {
         },
       });
       console.log("   ✅ Tool call structure is correct");
-      console.log("   (May fail if credentials are invalid, but structure is OK)");
+      console.log(
+        "   (May fail if credentials are invalid, but structure is OK)"
+      );
     } catch (error) {
       const errorMsg = String(error);
       if (errorMsg.includes("profile") || errorMsg.includes("not found")) {
@@ -198,11 +210,12 @@ async function inspectServer() {
     console.log("\n" + "=".repeat(70));
     console.log("✅ Server inspection complete!");
     console.log("\n📋 Summary:");
-    console.log("   • Check if profiles are isolated (test-user-1 vs test-user-2)");
+    console.log(
+      "   • Check if profiles are isolated (test-user-1 vs test-user-2)"
+    );
     console.log("   • Verify all tools accept 'profile' parameter");
     console.log("   • Confirm error handling for missing profiles");
     console.log("   • Review tool definitions for profile requirements");
-
   } catch (error) {
     console.error("\n❌ Inspection failed:", error);
     process.exit(1);
@@ -210,4 +223,3 @@ async function inspectServer() {
 }
 
 inspectServer();
-

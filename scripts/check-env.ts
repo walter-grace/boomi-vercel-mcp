@@ -7,10 +7,7 @@ import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
-const requiredVars = [
-  "POSTGRES_URL",
-  "AUTH_SECRET",
-];
+const requiredVars = ["POSTGRES_URL", "AUTH_SECRET"];
 
 const optionalVars = [
   "OPENROUTER_API_KEY",
@@ -30,7 +27,12 @@ let allRequired = true;
 console.log("Required variables:");
 for (const varName of requiredVars) {
   const value = process.env[varName];
-  if (value && value !== "" && !value.includes("your-") && !value.includes("example.com")) {
+  if (
+    value &&
+    value !== "" &&
+    !value.includes("your-") &&
+    !value.includes("example.com")
+  ) {
     console.log(`  ✅ ${varName}: Set`);
   } else {
     console.log(`  ❌ ${varName}: Not set or using placeholder`);
@@ -41,19 +43,23 @@ for (const varName of requiredVars) {
 console.log("\nOptional variables:");
 for (const varName of optionalVars) {
   const value = process.env[varName];
-  if (value && value !== "" && !value.includes("your-") && !value.includes("example.com")) {
+  if (
+    value &&
+    value !== "" &&
+    !value.includes("your-") &&
+    !value.includes("example.com")
+  ) {
     console.log(`  ✅ ${varName}: Set`);
   } else {
     console.log(`  ⚠️  ${varName}: Not set (optional)`);
   }
 }
 
-if (!allRequired) {
+if (allRequired) {
+  console.log("\n✅ All required environment variables are set!");
+  process.exit(0);
+} else {
   console.log("\n❌ Some required environment variables are missing!");
   console.log("Please update .env.local with your actual credentials.");
   process.exit(1);
-} else {
-  console.log("\n✅ All required environment variables are set!");
-  process.exit(0);
 }
-

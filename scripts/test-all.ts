@@ -55,7 +55,9 @@ tests.push({
       console.log("  ✅ Database connection successful");
       return true;
     } catch (error) {
-      console.log(`  ❌ Database connection failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `  ❌ Database connection failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   },
@@ -77,7 +79,9 @@ tests.push({
       console.log(`  ✅ MCP server is healthy: ${JSON.stringify(data)}`);
       return true;
     } catch (error) {
-      console.log(`  ❌ MCP server health check failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `  ❌ MCP server health check failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   },
@@ -135,10 +139,14 @@ tests.push({
       }
 
       const toolCount = toolsData.result?.tools?.length || 0;
-      console.log(`  ✅ MCP connection successful (${toolCount} tools available)`);
+      console.log(
+        `  ✅ MCP connection successful (${toolCount} tools available)`
+      );
       return true;
     } catch (error) {
-      console.log(`  ❌ MCP connection failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `  ❌ MCP connection failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   },
@@ -174,14 +182,18 @@ tests.push({
 
       const data = await response.json();
       if (data.error) {
-        console.log(`  ⚠️  Tool returned error (may be expected): ${data.error.message}`);
+        console.log(
+          `  ⚠️  Tool returned error (may be expected): ${data.error.message}`
+        );
         return true; // Still consider it a pass if we got a response
       }
 
       console.log("  ✅ MCP tool call successful");
       return true;
     } catch (error) {
-      console.log(`  ❌ MCP tool call failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `  ❌ MCP tool call failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   },
@@ -207,14 +219,18 @@ tests.push({
       await connection.end();
 
       if (tables.length < 3) {
-        console.log(`  ⚠️  Some tables missing. Run: pnpm db:migrate`);
+        console.log("  ⚠️  Some tables missing. Run: pnpm db:migrate");
         return false;
       }
 
-      console.log(`  ✅ Database schema is up to date (${tables.length} tables found)`);
+      console.log(
+        `  ✅ Database schema is up to date (${tables.length} tables found)`
+      );
       return true;
     } catch (error) {
-      console.log(`  ❌ Schema check failed: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `  ❌ Schema check failed: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
   },
@@ -223,7 +239,7 @@ tests.push({
 // Run all tests
 async function runTests() {
   console.log("🧪 Running Pre-Deployment Tests");
-  console.log("=" .repeat(50));
+  console.log("=".repeat(50));
   console.log("");
 
   let passed = 0;
@@ -240,7 +256,9 @@ async function runTests() {
         failed++;
       }
     } catch (error) {
-      console.log(`  ❌ Test threw error: ${error instanceof Error ? error.message : String(error)}`);
+      console.log(
+        `  ❌ Test threw error: ${error instanceof Error ? error.message : String(error)}`
+      );
       failed++;
     }
   }
@@ -266,4 +284,3 @@ runTests().catch((error) => {
   console.error("Fatal error running tests:", error);
   process.exit(1);
 });
-

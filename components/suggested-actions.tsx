@@ -62,7 +62,10 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   ];
 
   return (
-    <div className="w-full space-y-3 sm:space-y-4" data-testid="suggested-actions">
+    <div
+      className="w-full space-y-3 sm:space-y-4"
+      data-testid="suggested-actions"
+    >
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="text-xs sm:text-sm font-medium text-muted-foreground"
@@ -93,7 +96,9 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
               suggestion={action.text}
             >
               <div className="flex items-start gap-2 sm:gap-3">
-                <span className="text-xl sm:text-2xl flex-shrink-0">{action.icon}</span>
+                <span className="text-xl sm:text-2xl flex-shrink-0">
+                  {action.icon}
+                </span>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-primary mb-0.5 sm:mb-1">
                     {action.category}

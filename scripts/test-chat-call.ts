@@ -31,15 +31,16 @@ async function testChatCall() {
   try {
     const { getBoomiMCPTools } = await import("../lib/ai/mcp-client");
     const tools = await getBoomiMCPTools();
-    
+
     console.log(`✅ MCP tools loaded: ${Object.keys(tools).length} tools`);
     console.log(`   Tools: ${Object.keys(tools).join(", ")}`);
-    
+
     // Test a tool execution
     console.log("\n🧪 Testing tool execution...");
-    const mcpUrl = process.env.BOOMI_MCP_SERVER_URL || 
+    const mcpUrl =
+      process.env.BOOMI_MCP_SERVER_URL ||
       "https://boomi-mcp-server-replitzip.replit.app/mcp";
-    
+
     const response = await fetch(mcpUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -70,7 +71,9 @@ async function testChatCall() {
       }
     }
   } catch (error) {
-    console.log(`  ❌ Tool test failed: ${error instanceof Error ? error.message : String(error)}`);
+    console.log(
+      `  ❌ Tool test failed: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   console.log("\n" + "=".repeat(50));
@@ -87,4 +90,3 @@ async function testChatCall() {
 }
 
 testChatCall().catch(console.error);
-

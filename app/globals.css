@@ -18,7 +18,7 @@
   --boomi-dark-blue: hsl(206 100% 23%); /* #003B73 */
   --boomi-light-blue: hsl(194 100% 44%); /* #00A3E0 */
   --boomi-accent: hsl(204 100% 50%); /* Brighter blue for accents */
-  
+
   /* Main theme colors using Boomi palette */
   --background: hsl(0 0% 100%);
   --foreground: hsl(206 100% 23%);
@@ -64,7 +64,7 @@
   --boomi-dark-blue: hsl(206 100% 30%);
   --boomi-light-blue: hsl(194 100% 50%);
   --boomi-accent: hsl(204 100% 55%);
-  
+
   /* Dark mode theme with Boomi palette */
   --background: hsl(206 40% 8%); /* Dark blue-tinted background */
   --foreground: hsl(0 0% 98%);
@@ -336,7 +336,11 @@
 
 /* Custom gradient for headers */
 .boomi-gradient {
-  background: linear-gradient(135deg, var(--boomi-blue) 0%, var(--boomi-light-blue) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--boomi-blue) 0%,
+    var(--boomi-light-blue) 100%
+  );
 }
 
 /* Subtle hover effects */

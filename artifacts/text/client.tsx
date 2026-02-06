@@ -63,6 +63,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     getDocumentContentById,
     isLoading,
     metadata,
+    title,
   }) => {
     if (isLoading) {
       return <DocumentSkeleton artifactKind="text" />;
@@ -78,7 +79,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     return (
       <div className="flex flex-row px-4 py-8 md:p-20">
         <Editor
-          content={content}
+          content={content || ""}
           currentVersionIndex={currentVersionIndex}
           isCurrentVersion={isCurrentVersion}
           onSaveContent={onSaveContent}

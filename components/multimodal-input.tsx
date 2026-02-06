@@ -296,7 +296,9 @@ function PureMultimodalInput({
   }, [handlePaste]);
 
   return (
-    <div className={cn("relative flex w-full flex-col gap-3 sm:gap-4", className)}>
+    <div
+      className={cn("relative flex w-full flex-col gap-3 sm:gap-4", className)}
+    >
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
@@ -474,7 +476,9 @@ function PureModelSelectorCompact({
     chatModels.find((m) => m.id === selectedModelId) ??
     chatModels.find((m) => m.id === DEFAULT_CHAT_MODEL) ??
     chatModels[0];
-  const [provider] = selectedModel.id.split("/");
+  // Extract actual provider from openrouter/{provider}/{model} format
+  const idParts = selectedModel.id.split("/");
+  const provider = idParts.length >= 3 ? idParts[1] : idParts[0];
 
   // Provider display names
   const providerNames: Record<string, string> = {
@@ -482,15 +486,21 @@ function PureModelSelectorCompact({
     openai: "OpenAI",
     google: "Google",
     xai: "xAI",
-    reasoning: "Reasoning",
+    deepseek: "DeepSeek",
+    moonshot: "Moonshot",
   };
 
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
       <ModelSelectorTrigger asChild>
-        <Button className="h-8 w-[140px] sm:w-[180px] md:w-[200px] justify-between px-1.5 sm:px-2 text-xs sm:text-sm" variant="ghost">
+        <Button
+          className="h-8 w-[140px] sm:w-[180px] md:w-[200px] justify-between px-1.5 sm:px-2 text-xs sm:text-sm"
+          variant="ghost"
+        >
           {provider && <ModelSelectorLogo provider={provider} />}
-          <ModelSelectorName className="truncate">{selectedModel.name}</ModelSelectorName>
+          <ModelSelectorName className="truncate">
+            {selectedModel.name}
+          </ModelSelectorName>
         </Button>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
@@ -503,7 +513,9 @@ function PureModelSelectorCompact({
                 key={providerKey}
               >
                 {providerModels.map((model) => {
-                  const logoProvider = model.id.split("/")[0];
+                  // Extract actual provider from openrouter/{provider}/{model}
+                  const parts = model.id.split("/");
+                  const logoProvider = parts.length >= 3 ? parts[1] : parts[0];
                   return (
                     <ModelSelectorItem
                       key={model.id}

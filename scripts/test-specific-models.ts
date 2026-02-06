@@ -1,11 +1,12 @@
 #!/usr/bin/env tsx
+
 /**
  * Test specific OpenRouter models
  */
 
-import { config } from "dotenv";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
@@ -33,7 +34,8 @@ async function testSpecificModels() {
   const openrouter = createOpenRouter({
     apiKey,
     headers: {
-      "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
+      "HTTP-Referer":
+        process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
       "X-Title": process.env.OPENROUTER_APP_NAME || "Boomi Chatbot",
     },
   });
@@ -86,8 +88,10 @@ async function testSpecificModels() {
           console.error("      • API key needs verification");
           console.error("      • Check: https://openrouter.ai/keys");
         } else if (error.message.includes("model not found")) {
-          console.error("   💡 Model might not be available or ID is incorrect");
-          console.error(`      Check: https://openrouter.ai/models`);
+          console.error(
+            "   💡 Model might not be available or ID is incorrect"
+          );
+          console.error("      Check: https://openrouter.ai/models");
         }
       } else {
         console.error(`   Unknown error: ${error}`);
@@ -105,4 +109,3 @@ async function testSpecificModels() {
 }
 
 testSpecificModels().catch(console.error);
-

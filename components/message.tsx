@@ -21,6 +21,7 @@ import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
+import { SuggestedFollowUps } from "./suggested-follow-ups";
 import { Weather } from "./weather";
 
 const PurePreviewMessage = ({
@@ -31,7 +32,9 @@ const PurePreviewMessage = ({
   isLoading,
   setMessages,
   regenerate,
+  sendMessage,
   isReadonly,
+  isLastAssistantMessage,
   requiresScrollPadding: _requiresScrollPadding,
 }: {
   addToolApprovalResponse: UseChatHelpers<ChatMessage>["addToolApprovalResponse"];
@@ -41,7 +44,9 @@ const PurePreviewMessage = ({
   isLoading: boolean;
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
   regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+  sendMessage?: UseChatHelpers<ChatMessage>["sendMessage"];
   isReadonly: boolean;
+  isLastAssistantMessage?: boolean;
   requiresScrollPadding: boolean;
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -355,6 +360,17 @@ const PurePreviewMessage = ({
               vote={vote}
             />
           )}
+
+          {message.role === "assistant" &&
+            isLastAssistantMessage &&
+            !isLoading &&
+            sendMessage && (
+              <SuggestedFollowUps
+                chatId={chatId}
+                message={message}
+                sendMessage={sendMessage}
+              />
+            )}
         </div>
       </div>
     </div>

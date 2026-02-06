@@ -9,32 +9,43 @@ export const sheetDocumentHandler = createDocumentHandler<"sheet">({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = "";
 
-    const { fullStream } = streamObject({
-      model: getArtifactModel(),
-      system: sheetPrompt,
-      prompt: title,
-      schema: z.object({
-        csv: z.string().describe("CSV data"),
-      }),
-    });
+    try {
+      console.log("[Sheet] Creating sheet with title:", title);
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
+      const { fullStream } = streamObject({
+        model: getArtifactModel(),
+        system: sheetPrompt,
+        prompt: title,
+        schema: z.object({
+          csv: z.string().describe("CSV data"),
+        }),
+      });
 
-      if (type === "object") {
-        const { object } = delta;
-        const { csv } = object;
+      for await (const delta of fullStream) {
+        const { type } = delta;
 
-        if (csv) {
-          dataStream.write({
-            type: "data-sheetDelta",
-            data: csv,
-            transient: true,
-          });
+        if (type === "object") {
+          const { object } = delta;
+          const { csv } = object;
 
-          draftContent = csv;
+          if (csv) {
+            dataStream.write({
+              type: "data-sheetDelta",
+              data: csv,
+              transient: true,
+            });
+
+            draftContent = csv;
+          }
         }
       }
+
+      console.log(
+        "[Sheet] Generated CSV content length:",
+        draftContent.length,
+      );
+    } catch (error) {
+      console.error("[Sheet] Error generating sheet content:", error);
     }
 
     dataStream.write({
@@ -48,32 +59,43 @@ export const sheetDocumentHandler = createDocumentHandler<"sheet">({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = "";
 
-    const { fullStream } = streamObject({
-      model: getArtifactModel(),
-      system: updateDocumentPrompt(document.content, "sheet"),
-      prompt: description,
-      schema: z.object({
-        csv: z.string(),
-      }),
-    });
+    try {
+      console.log("[Sheet] Updating sheet:", document.title);
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
+      const { fullStream } = streamObject({
+        model: getArtifactModel(),
+        system: updateDocumentPrompt(document.content, "sheet"),
+        prompt: description,
+        schema: z.object({
+          csv: z.string(),
+        }),
+      });
 
-      if (type === "object") {
-        const { object } = delta;
-        const { csv } = object;
+      for await (const delta of fullStream) {
+        const { type } = delta;
 
-        if (csv) {
-          dataStream.write({
-            type: "data-sheetDelta",
-            data: csv,
-            transient: true,
-          });
+        if (type === "object") {
+          const { object } = delta;
+          const { csv } = object;
 
-          draftContent = csv;
+          if (csv) {
+            dataStream.write({
+              type: "data-sheetDelta",
+              data: csv,
+              transient: true,
+            });
+
+            draftContent = csv;
+          }
         }
       }
+
+      console.log(
+        "[Sheet] Updated CSV content length:",
+        draftContent.length,
+      );
+    } catch (error) {
+      console.error("[Sheet] Error updating sheet content:", error);
     }
 
     return draftContent;

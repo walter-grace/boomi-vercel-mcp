@@ -73,15 +73,22 @@ export function VisibilitySelector({
           data-testid="visibility-selector"
           variant="outline"
         >
-          <span className="flex items-center justify-center size-4 sm:size-4">{selectedVisibility?.icon}</span>
-          <span className="hidden sm:inline md:sr-only">{selectedVisibility?.label}</span>
+          <span className="flex items-center justify-center size-4 sm:size-4">
+            {selectedVisibility?.icon}
+          </span>
+          <span className="hidden sm:inline md:sr-only">
+            {selectedVisibility?.label}
+          </span>
           <span className="hidden sm:inline">
             <ChevronDownIcon size={16} />
           </span>
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="min-w-[280px] sm:min-w-[300px]">
+      <DropdownMenuContent
+        align="start"
+        className="min-w-[280px] sm:min-w-[300px]"
+      >
         {visibilities.map((visibility) => (
           <DropdownMenuItem
             className="group/item flex flex-row items-center justify-between gap-4"

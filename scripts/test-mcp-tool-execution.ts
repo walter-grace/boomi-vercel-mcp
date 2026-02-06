@@ -69,4 +69,3 @@ async function testMCPToolExecution() {
 }
 
 testMCPToolExecution().catch(console.error);
-

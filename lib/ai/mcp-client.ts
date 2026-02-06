@@ -74,7 +74,7 @@ async function initializeMCPConnection(): Promise<boolean> {
 /**
  * Fetch MCP tools from the Boomi server using JSON-RPC
  */
-async function fetchMCPTools(): Promise<MCPTool[]> {
+export async function fetchMCPTools(): Promise<MCPTool[]> {
   try {
     // Initialize connection first
     await initializeMCPConnection();
@@ -409,18 +409,104 @@ async function autoSetBoomiCredentials(): Promise<void> {
 }
 
 /**
+ * Set user-specific Boomi credentials on the MCP server
+ */
+export async function setUserBoomiCredentials(credentials: {
+  accountId: string;
+  username: string;
+  apiToken: string;
+  profileName: string;
+}): Promise<void> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch(MCP_SERVER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: Date.now(),
+          method: "tools/call",
+          params: {
+            name: "set_boomi_credentials",
+            arguments: {
+              profile: credentials.profileName,
+              account_id: credentials.accountId,
+              username: credentials.username,
+              password: credentials.apiToken, // MCP server expects 'password' parameter
+            },
+          },
+        }),
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = (await response.json()) as {
+          jsonrpc: string;
+          result?: {
+            content: Array<{ type: string; text: string }>;
+          };
+          error?: { code: number; message: string };
+        };
+
+        if (!data.error) {
+          console.log(
+            `✅ Set Boomi credentials for profile: ${credentials.profileName}`
+          );
+        } else {
+          console.warn(
+            `⚠️  Failed to set user Boomi credentials: ${data.error.message}`
+          );
+        }
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.warn(
+          `⚠️  Failed to set user Boomi credentials: ${error.message}`
+        );
+      }
+    }
+  } catch (error) {
+    // Silently fail - credentials can be set manually if needed
+    console.warn("Failed to set user Boomi credentials");
+  }
+}
+
+/**
  * Get MCP tools from the Boomi server, converted to AI SDK format
  * Caches tools to avoid repeated calls
+ * 
+ * @param userCredentials - Optional user-specific Boomi credentials.
+ *                          If provided, these will be used instead of env vars.
+ *                          If not provided, falls back to environment variables.
  */
-export async function getBoomiMCPTools(): Promise<
-  Record<string, ReturnType<typeof tool>>
-> {
-  if (mcpToolsCache) {
-    return mcpToolsCache;
+export async function getBoomiMCPTools(
+  userCredentials?: {
+    accountId: string;
+    username: string;
+    apiToken: string;
+    profileName: string;
+  }
+): Promise<Record<string, ReturnType<typeof tool>>> {
+  // If we have cached tools but user credentials are provided,
+  // we need to set credentials first (credentials may have changed)
+  if (mcpToolsCache && userCredentials) {
+    await setUserBoomiCredentials(userCredentials);
+    // Don't return cached tools - we want to ensure credentials are set
   }
 
-  // Auto-set credentials from environment variables
-  await autoSetBoomiCredentials();
+  // Set credentials if provided, otherwise use env vars (backward compatibility)
+  if (userCredentials) {
+    await setUserBoomiCredentials(userCredentials);
+  } else {
+    // Auto-set credentials from environment variables
+    await autoSetBoomiCredentials();
+  }
 
   const mcpTools = await fetchMCPTools();
 

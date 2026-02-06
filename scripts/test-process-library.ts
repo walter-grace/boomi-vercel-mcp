@@ -29,9 +29,9 @@ async function testProcessLibrary() {
 
     const profileName = process.env.BOOMI_PROFILE_NAME || "production";
     const folderName = "Process Library";
-    
+
     console.log(`   Profile: ${profileName}`);
-    console.log(`   Action: list`);
+    console.log("   Action: list");
     console.log(`   Folder: ${folderName}`);
     console.log("   Calling tool...\n");
 
@@ -55,9 +55,13 @@ async function testProcessLibrary() {
       // Pretty print the processes
       if (result && typeof result === "object") {
         let processes: any[] = [];
-        
+
         // Handle nested result structure: result.result.processes
-        if (result.result && result.result.processes && Array.isArray(result.result.processes)) {
+        if (
+          result.result &&
+          result.result.processes &&
+          Array.isArray(result.result.processes)
+        ) {
           processes = result.result.processes;
         } else if (Array.isArray(result)) {
           processes = result;
@@ -68,9 +72,12 @@ async function testProcessLibrary() {
         }
 
         if (processes.length > 0) {
-          console.log(`   📋 Found ${processes.length} processes in "${folderName}" folder:`);
+          console.log(
+            `   📋 Found ${processes.length} processes in "${folderName}" folder:`
+          );
           processes.slice(0, 10).forEach((process: any, index: number) => {
-            const name = process.name || process.componentName || process.id || "Unknown";
+            const name =
+              process.name || process.componentName || process.id || "Unknown";
             const id = process.id || process.componentId || "N/A";
             console.log(`      ${index + 1}. ${name} (ID: ${id})`);
           });
@@ -104,4 +111,3 @@ async function testProcessLibrary() {
 }
 
 testProcessLibrary().catch(console.error);
-

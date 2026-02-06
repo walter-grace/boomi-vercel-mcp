@@ -7,6 +7,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -168,3 +169,40 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+export const boomiCredentials = pgTable(
+  "BoomiCredentials",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accountId: varchar("accountId", { length: 255 }).notNull(),
+    username: varchar("username", { length: 255 }).notNull(),
+    apiToken: text("apiToken").notNull(), // Encrypted
+    profileName: varchar("profileName", { length: 100 })
+      .notNull()
+      .default("default"),
+    createdAt: timestamp("createdAt").notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+  },
+  (table) => ({
+    // Ensure one credential set per user
+    uniqueUserCredentials: unique().on(table.userId),
+  })
+);
+
+export type BoomiCredentials = InferSelectModel<typeof boomiCredentials>;
+
+export const mcpToolsCache = pgTable("McpToolsCache", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  tools: json("tools").notNull(), // Array of MCP tool definitions
+  toolCount: varchar("toolCount", { length: 10 }).notNull().default("0"),
+  cachedAt: timestamp("cachedAt").notNull().defaultNow(),
+  expiresAt: timestamp("expiresAt").notNull(),
+});
+
+export type McpToolsCache = InferSelectModel<typeof mcpToolsCache>;

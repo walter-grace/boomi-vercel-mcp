@@ -20,7 +20,7 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
 
 async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  
+
   // Check password protection
   const cookieStore = await cookies();
   const demoAuth = cookieStore.get("demo-auth");

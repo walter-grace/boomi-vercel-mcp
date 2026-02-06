@@ -7,7 +7,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
-import { X } from "lucide-react";
 import { PlusIcon, TrashIcon } from "@/components/icons";
 import {
   getChatHistoryPaginationKey,
@@ -34,6 +33,9 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { BoomiConnectBanner } from "./boomi-connect-banner";
+import { AvailableTools } from "./available-tools";
+import { SidebarPrompts } from "./sidebar-prompts";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
@@ -124,6 +126,76 @@ export function AppSidebar({ user }: { user: User | undefined }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarHistory user={user} />
+
+          {/* Settings & Tools links */}
+          {user && (
+            <div className="mt-4 border-t pt-4 px-2 space-y-1.5">
+              <div className="px-3 mb-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Settings & Tools
+                </span>
+              </div>
+              <Link
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                href="/settings"
+                onClick={() => {
+                  setOpenMobile(false);
+                }}
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#0073CF] to-[#00A3E0]">
+                  <span className="text-white text-xs font-bold">B</span>
+                </div>
+                <div className="flex flex-col">
+                  <span>Connect Boomi Account</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">
+                    Manage API credentials
+                  </span>
+                </div>
+              </Link>
+              <Link
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                href="/tooling"
+                onClick={() => {
+                  setOpenMobile(false);
+                }}
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#00A3E0] to-[#0073CF]">
+                  <span className="text-white text-xs">🧪</span>
+                </div>
+                <div className="flex flex-col">
+                  <span>Tooling & Prompts</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">
+                    31 tools & prompt library
+                  </span>
+                </div>
+              </Link>
+            </div>
+          )}
+
+          {/* Mobile-only: Inline greeting content */}
+          {isMobile && user && (
+            <div className="mt-3 border-t pt-3 px-2 space-y-3">
+              {/* Connect Boomi Banner */}
+              <div className="px-1">
+                <BoomiConnectBanner />
+              </div>
+
+              {/* Available Tools (collapsible) */}
+              <div className="px-1">
+                <AvailableTools />
+              </div>
+
+              {/* Quick Prompts */}
+              <div className="px-1">
+                <SidebarPrompts
+                  onPromptClick={(prompt) => {
+                    setOpenMobile(false);
+                    router.push(`/?query=${encodeURIComponent(prompt)}`);
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </SidebarContent>
         <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
       </Sidebar>

@@ -23,7 +23,9 @@ async function testChatAPI() {
     // Test 1: Health check
     console.log("1️⃣ Testing server availability...");
     try {
-      const healthResponse = await fetch(`${baseUrl}/api/health`).catch(() => null);
+      const healthResponse = await fetch(`${baseUrl}/api/health`).catch(
+        () => null
+      );
       if (!healthResponse) {
         console.log("  ⚠️  Server not running. Start with: pnpm dev");
         console.log("  Skipping API tests...");
@@ -56,7 +58,6 @@ async function testChatAPI() {
     console.log("  2. Visit: http://localhost:3000");
     console.log("  3. Test chat with MCP tools");
     console.log("");
-
   } catch (error) {
     console.error("❌ Test failed:", error);
     process.exit(1);
@@ -64,4 +65,3 @@ async function testChatAPI() {
 }
 
 testChatAPI();
-

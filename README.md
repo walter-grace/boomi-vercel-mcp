@@ -35,8 +35,9 @@ Manage your Boomi integrations, processes, and trading partners with AI-powered 
 - **File Attachments** - Upload and process files in conversations
 
 ### Boomi MCP Tools
-The app integrates with a Boomi MCP (Model Context Protocol) server providing 7 specialized tools:
+The app integrates with a Boomi MCP (Model Context Protocol) server providing specialized tools for managing Boomi Platform integrations.
 
+#### Current Tools (7)
 1. **`list_boomi_profiles`** - List all saved Boomi credential profiles
 2. **`set_boomi_credentials`** - Store Boomi API credentials securely
 3. **`delete_boomi_profile`** - Delete a stored credential profile
@@ -44,6 +45,18 @@ The app integrates with a Boomi MCP (Model Context Protocol) server providing 7 
 5. **`manage_trading_partner`** - Manage B2B/EDI trading partners (CRUD operations)
 6. **`manage_process`** - Manage Boomi process components (CRUD operations)
 7. **`manage_organization`** - Manage Boomi organization components (CRUD operations)
+
+#### Extended Tools (10+ - To Be Implemented)
+The MCP server can be extended to support querying additional Boomi components needed for complete process building:
+
+- **Connection Tools**: `list_connections`, `get_connection`
+- **ConnectorOperation Tools**: `list_connector_operations`, `get_connector_operation`
+- **Map Tools**: `list_maps`, `get_map`
+- **BusinessRule Tools**: `list_business_rules`, `get_business_rule`
+- **Certificate Tools**: `list_certificates`
+- **Generic Query Tool**: `query_component` (supports any Boomi object type)
+
+See [MCP Server Extension Specification](docs/MCP_SERVER_EXTENSION_SPEC.md) for implementation details.
 
 ## 🛠️ Tech Stack
 
@@ -164,7 +177,12 @@ The app uses OpenRouter to access 100+ AI models. Configure your preferred model
    "List all trading partners"
    "Create a new process called Order Processing"
    "Show me account information"
+   "List all database connections"
+   "Show me all HL7 transformation maps"
+   "Query all business rules"
    ```
+
+   See [MCP Integration Guide](docs/MCP_INTEGRATION.md) for complete tool documentation.
 
 ## 🚢 Deployment
 
@@ -196,6 +214,8 @@ vercel --prod
 ## 📖 Documentation
 
 - [MCP Integration Guide](docs/MCP_INTEGRATION.md) - Boomi MCP server integration
+- [Boomi API Components Reference](docs/BOOMI_API_COMPONENTS.md) - Complete reference for Boomi Platform API object types
+- [MCP Server Extension Specification](docs/MCP_SERVER_EXTENSION_SPEC.md) - Implementation guide for extending the MCP server
 - [OpenRouter Integration](docs/OPENROUTER_INTEGRATION.md) - AI model configuration
 - [Authentication Setup](docs/AUTHENTICATION_SETUP.md) - Auth system details
 - [UI Improvements](docs/UI_IMPROVEMENTS.md) - UI/UX enhancements

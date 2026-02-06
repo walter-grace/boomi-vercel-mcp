@@ -20,7 +20,7 @@ async function testChatAPIWithAuth() {
   // For testing, we'll check if we can at least see the endpoint structure
 
   console.log("1️⃣ Testing endpoint availability...");
-  
+
   try {
     // Try OPTIONS to see if endpoint exists
     const optionsResponse = await fetch(`${API_URL}/api/chat`, {
@@ -48,18 +48,20 @@ async function testChatAPIWithAuth() {
     });
 
     console.log(`   Status: ${response.status} ${response.statusText}`);
-    
+
     if (response.status === 401 || response.status === 403) {
       console.log("   ✅ Endpoint requires authentication (expected)");
       const errorText = await response.text();
       console.log(`   Error: ${errorText.slice(0, 200)}`);
     } else if (response.status === 405) {
-      console.log("   ⚠️  Method not allowed - endpoint might not exist or routing issue");
+      console.log(
+        "   ⚠️  Method not allowed - endpoint might not exist or routing issue"
+      );
     } else {
       const text = await response.text();
       console.log(`   Response: ${text.slice(0, 500)}`);
     }
-    
+
     console.log("");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("💡 To test with real auth:");
@@ -72,7 +74,6 @@ async function testChatAPIWithAuth() {
     console.log("");
     console.log("🔍 Or check the browser console for [UI] logs");
     console.log("   and terminal for [Chat] logs");
-    
   } catch (error) {
     console.error("");
     console.error("❌ Test failed:", error);
@@ -84,4 +85,3 @@ async function testChatAPIWithAuth() {
 
 // Run the test
 testChatAPIWithAuth().catch(console.error);
-

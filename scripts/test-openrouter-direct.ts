@@ -26,14 +26,16 @@ async function testOpenRouterDirect() {
   try {
     const modelsResponse = await fetch("https://openrouter.ai/api/v1/models", {
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "HTTP-Referer": "https://your-app.com",
         "X-Title": "Boomi Chatbot",
       },
     });
 
-    console.log(`   Status: ${modelsResponse.status} ${modelsResponse.statusText}`);
-    
+    console.log(
+      `   Status: ${modelsResponse.status} ${modelsResponse.statusText}`
+    );
+
     if (modelsResponse.ok) {
       const data = await modelsResponse.json();
       console.log(`   ✅ Success! Found ${data.data?.length || 0} models`);
@@ -44,38 +46,45 @@ async function testOpenRouterDirect() {
       console.log("");
     }
   } catch (error) {
-    console.error(`   ❌ Error: ${error instanceof Error ? error.message : error}`);
+    console.error(
+      `   ❌ Error: ${error instanceof Error ? error.message : error}`
+    );
     console.log("");
   }
 
   // Test 2: Chat completion (the actual API call)
   console.log("2️⃣ Testing /api/v1/chat/completions endpoint...");
   try {
-    const chatResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://your-app.com",
-        "X-Title": "Boomi Chatbot",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: "Say hello in one word.",
-          },
-        ],
-      }),
-    });
+    const chatResponse = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://your-app.com",
+          "X-Title": "Boomi Chatbot",
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4o-mini",
+          messages: [
+            {
+              role: "user",
+              content: "Say hello in one word.",
+            },
+          ],
+        }),
+      }
+    );
 
     console.log(`   Status: ${chatResponse.status} ${chatResponse.statusText}`);
-    
+
     if (chatResponse.ok) {
       const data = await chatResponse.json();
-      console.log(`   ✅ Success!`);
-      console.log(`   Response: ${data.choices?.[0]?.message?.content || "N/A"}`);
+      console.log("   ✅ Success!");
+      console.log(
+        `   Response: ${data.choices?.[0]?.message?.content || "N/A"}`
+      );
       console.log("");
     } else {
       const errorText = await chatResponse.text();
@@ -85,13 +94,16 @@ async function testOpenRouterDirect() {
       } catch {
         error = { error: { message: errorText } };
       }
-      
-      console.log(`   ❌ Failed:`);
+
+      console.log("   ❌ Failed:");
       console.log(`   Full Error Response: ${errorText}`);
       console.log(`   Parsed Error: ${JSON.stringify(error, null, 2)}`);
       console.log("");
-      
-      if (error.error?.type === "customer_verification_required" || errorText.includes("customer_verification_required")) {
+
+      if (
+        error.error?.type === "customer_verification_required" ||
+        errorText.includes("customer_verification_required")
+      ) {
         console.log("   🔍 ISSUE FOUND: Customer verification required!");
         console.log("");
         console.log("   💡 Your OpenRouter account needs verification:");
@@ -101,7 +113,10 @@ async function testOpenRouterDirect() {
         console.log("      4. Verify your email if needed");
         console.log("      5. Check for any pending verification steps");
         console.log("");
-      } else if (error.error?.message === "User not found." || errorText.includes("User not found")) {
+      } else if (
+        error.error?.message === "User not found." ||
+        errorText.includes("User not found")
+      ) {
         console.log("   💡 This 'User not found' error typically means:");
         console.log("      • API key is invalid or expired");
         console.log("      • API key needs to be regenerated");
@@ -111,7 +126,9 @@ async function testOpenRouterDirect() {
       }
     }
   } catch (error) {
-    console.error(`   ❌ Error: ${error instanceof Error ? error.message : error}`);
+    console.error(
+      `   ❌ Error: ${error instanceof Error ? error.message : error}`
+    );
     console.log("");
   }
 
@@ -121,4 +138,3 @@ async function testOpenRouterDirect() {
 }
 
 testOpenRouterDirect().catch(console.error);
-

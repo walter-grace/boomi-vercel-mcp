@@ -113,13 +113,24 @@ function PureArtifact({
       if (mostRecentDocument) {
         setDocument(mostRecentDocument);
         setCurrentVersionIndex(documents.length - 1);
-        setArtifact((currentArtifact) => ({
-          ...currentArtifact,
-          content: mostRecentDocument.content ?? "",
-        }));
+        const newContent = mostRecentDocument.content ?? "";
+        setArtifact((currentArtifact) => {
+          if (currentArtifact.content !== newContent) {
+            return {
+              ...currentArtifact,
+              content: newContent,
+            };
+          }
+          return currentArtifact;
+        });
       }
+    } else if (documents && documents.length === 0 && artifact.documentId !== "init") {
+      setArtifact((currentArtifact) => ({
+        ...currentArtifact,
+        content: "",
+      }));
     }
-  }, [documents, setArtifact]);
+  }, [documents, setArtifact, artifact.documentId]);
 
   useEffect(() => {
     mutateDocuments();
@@ -463,14 +474,14 @@ function PureArtifact({
               <artifactDefinition.content
                 content={
                   isCurrentVersion
-                    ? artifact.content
+                    ? (artifact.content || (document?.content ?? ""))
                     : getDocumentContentById(currentVersionIndex)
                 }
                 currentVersionIndex={currentVersionIndex}
                 getDocumentContentById={getDocumentContentById}
                 isCurrentVersion={isCurrentVersion}
                 isInline={false}
-                isLoading={isDocumentsFetching && !artifact.content}
+                isLoading={isDocumentsFetching && !artifact.content && !document?.content}
                 metadata={metadata}
                 mode={mode}
                 onSaveContent={saveContent}

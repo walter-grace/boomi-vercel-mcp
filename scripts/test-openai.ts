@@ -14,7 +14,10 @@ async function testOpenAI() {
 
   // Check if OpenAI API key is set
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  if (apiKey) {
+    console.log("✅ OPENAI_API_KEY is set");
+    console.log("");
+  } else {
     console.log("⚠️  OPENAI_API_KEY not set in .env.local");
     console.log("   OpenAI direct models will use gateway instead");
     console.log("");
@@ -22,22 +25,19 @@ async function testOpenAI() {
     console.log("  1. Get API key from https://platform.openai.com/api-keys");
     console.log("  2. Add to .env.local: OPENAI_API_KEY=sk-...");
     console.log("");
-  } else {
-    console.log("✅ OPENAI_API_KEY is set");
-    console.log("");
   }
 
   // Test OpenAI provider
   console.log("🔧 Testing OpenAI Provider...");
   try {
     const { getLanguageModel } = await import("../lib/ai/providers");
-    
+
     // Test gateway OpenAI model
     console.log("\n1️⃣ Testing OpenAI via Gateway (openai/gpt-4.1-mini)...");
     const gatewayModel = getLanguageModel("openai/gpt-4.1-mini");
     console.log("  ✅ Gateway OpenAI model loaded");
     console.log(`  Model ID: ${gatewayModel.modelId}`);
-    
+
     // Test direct OpenAI model (if API key is set)
     if (apiKey) {
       console.log("\n2️⃣ Testing OpenAI Direct (openai-direct/gpt-4o-mini)...");
@@ -60,7 +60,6 @@ async function testOpenAI() {
       console.log("  • openai-direct/gpt-4-turbo (Direct API)");
     }
     console.log("");
-
   } catch (error) {
     console.error("❌ Test failed:", error);
     process.exit(1);
@@ -68,4 +67,3 @@ async function testOpenAI() {
 }
 
 testOpenAI();
-

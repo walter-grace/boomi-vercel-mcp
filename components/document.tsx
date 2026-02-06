@@ -58,7 +58,7 @@ function PureDocumentToolResult({
         setArtifact((currentArtifact) => ({
           documentId: result.id,
           kind: result.kind,
-          content: currentArtifact.content,
+          content: "", // Will be loaded from the fetched document
           title: result.title,
           isVisible: true,
           status: "idle",

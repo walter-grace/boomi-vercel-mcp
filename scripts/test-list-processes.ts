@@ -33,7 +33,7 @@ async function testListProcesses() {
 
     const profileName = process.env.BOOMI_PROFILE_NAME || "production";
     console.log(`   Profile: ${profileName}`);
-    console.log(`   Action: list`);
+    console.log("   Action: list");
     console.log("   Calling tool...\n");
 
     const result = await manageProcessTool.execute({
@@ -47,11 +47,15 @@ async function testListProcesses() {
       console.log(`      ${result.error}`);
       console.log("");
       console.log("   🔍 This appears to be a server-side issue.");
-      console.log("   The MCP server is not receiving the 'action' parameter correctly.");
+      console.log(
+        "   The MCP server is not receiving the 'action' parameter correctly."
+      );
       console.log("");
       console.log("   💡 Possible solutions:");
       console.log("      1. Check if the MCP server needs to be updated");
-      console.log("      2. Try using the chat interface - the AI might handle it differently");
+      console.log(
+        "      2. Try using the chat interface - the AI might handle it differently"
+      );
       console.log("      3. Contact the MCP server maintainer about this bug");
       console.log("");
     } else {
@@ -103,4 +107,3 @@ async function testListProcesses() {
 }
 
 testListProcesses().catch(console.error);
-

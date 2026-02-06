@@ -106,3 +106,8 @@ tsconfig.tsbuildinfo
 /playwright-report/
 /blob-report/
 /playwright/*
+
+# ============================================
+# LOCAL TESTING DOCS
+# ============================================
+TOOLING_TESTS.md

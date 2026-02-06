@@ -1,11 +1,12 @@
 #!/usr/bin/env tsx
+
 /**
  * Test GPT-5 Nano via OpenRouter
  */
 
-import { config } from "dotenv";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
@@ -33,7 +34,8 @@ async function testGPT5Nano() {
   const openrouter = createOpenRouter({
     apiKey,
     headers: {
-      "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
+      "HTTP-Referer":
+        process.env.OPENROUTER_HTTP_REFERER || "https://your-app.com",
       "X-Title": process.env.OPENROUTER_APP_NAME || "Boomi Chatbot",
     },
   });
@@ -70,9 +72,14 @@ async function testGPT5Nano() {
         console.error("      • API key needs credits added");
         console.error("      • API key needs verification");
         console.error("      • Check: https://openrouter.ai/keys");
-      } else if (error.message.includes("model not found") || error.message.includes("404")) {
-        console.error("   💡 Model might not be available yet or ID is incorrect");
-        console.error(`      Check: https://openrouter.ai/models`);
+      } else if (
+        error.message.includes("model not found") ||
+        error.message.includes("404")
+      ) {
+        console.error(
+          "   💡 Model might not be available yet or ID is incorrect"
+        );
+        console.error("      Check: https://openrouter.ai/models");
         console.error("      Note: GPT-5 Nano might be a preview/beta model");
       }
     } else {
@@ -124,4 +131,3 @@ async function testGPT5Nano() {
 }
 
 testGPT5Nano().catch(console.error);
-

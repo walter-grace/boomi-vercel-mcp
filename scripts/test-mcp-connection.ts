@@ -106,9 +106,15 @@ async function testMCPConnection() {
 
     const toolData = await toolResponse.json();
     if (toolData.error) {
-      console.log("⚠️  Tool call returned error (this is OK if no profiles exist):", toolData.error.message);
+      console.log(
+        "⚠️  Tool call returned error (this is OK if no profiles exist):",
+        toolData.error.message
+      );
     } else {
-      console.log("✅ Tool call successful:", JSON.stringify(toolData.result, null, 2));
+      console.log(
+        "✅ Tool call successful:",
+        JSON.stringify(toolData.result, null, 2)
+      );
     }
 
     console.log("\n🎉 All MCP connection tests passed!");
@@ -131,4 +137,3 @@ testMCPConnection()
     console.error("Unexpected error:", error);
     process.exit(1);
   });
-
