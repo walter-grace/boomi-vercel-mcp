@@ -8,14 +8,11 @@ import {
   Rocket,
   ListChecks,
   Plug,
-  Menu,
 } from "lucide-react";
 import { BoomiConnectBanner } from "./boomi-connect-banner";
 import { AvailableTools } from "./available-tools";
 import { PromptLibrary } from "./prompt-library";
-import { useSidebar } from "./ui/sidebar";
 import type { ChatMessage } from "@/lib/types";
-import { Button } from "./ui/button";
 
 type GreetingProps = {
   chatId: string;
@@ -65,8 +62,6 @@ const quickActions = [
 ];
 
 export const Greeting = ({ chatId, sendMessage }: GreetingProps) => {
-  const { setOpenMobile } = useSidebar();
-
   const handleQuickAction = (prompt: string) => {
     window.history.pushState({}, "", `/chat/${chatId}`);
     sendMessage({
@@ -82,78 +77,49 @@ export const Greeting = ({ chatId, sendMessage }: GreetingProps) => {
    */
   return (
     <div
-      className="mx-auto flex size-full max-w-3xl flex-col px-4 pt-4 pb-6 md:mt-16 md:justify-center md:px-8"
+      className="mx-auto flex size-full max-w-3xl flex-col px-3 pt-6 pb-4 md:mt-16 md:justify-center md:px-8"
       key="overview"
     >
-      {/* ── Title ──────────────────────────────────────────────── */}
+      {/* ─────────── Mobile layout ─────────── */}
+
+      {/* Centered hero with icon + title (mobile) */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="font-bold text-2xl md:text-4xl bg-gradient-to-r from-[#0073CF] to-[#00A3E0] bg-clip-text text-transparent"
+        className="flex flex-col items-center text-center md:hidden"
         exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.2 }}
       >
-        Welcome to Boomi Assistant
+        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#0073CF] to-[#00A3E0] flex items-center justify-center shadow-lg shadow-[#0073CF]/20">
+          <span className="text-white font-bold text-xl">B</span>
+        </div>
+        <h1 className="mt-3 font-bold text-xl bg-gradient-to-r from-[#0073CF] to-[#00A3E0] bg-clip-text text-transparent">
+          Boomi Assistant
+        </h1>
+        <p className="mt-1 text-xs text-muted-foreground">
+          AI-powered integration management
+        </p>
       </motion.div>
 
-      {/* ── Subtitle ───────────────────────────────────────────── */}
+      {/* Quick actions grid (mobile) */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="text-sm md:text-xl text-muted-foreground mt-1 md:mt-2"
+        className="mt-5 grid grid-cols-2 gap-2 md:hidden"
         exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.4 }}
-      >
-        {/* Short on mobile, full on desktop */}
-        <span className="md:hidden">AI-powered integration management</span>
-        <span className="hidden md:inline">
-          Manage your integrations, processes, and trading partners with
-          AI-powered assistance
-        </span>
-      </motion.div>
-
-      {/* ── Connect banner ─────────────────────────────────────── */}
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 md:mt-6 md:mb-4"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.45 }}
-      >
-        <BoomiConnectBanner />
-      </motion.div>
-
-      {/* ── Quick Actions (mobile only) ────────────────────────── */}
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-5 mb-3 md:hidden"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.5 }}
-      >
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Quick Actions
-        </h3>
-      </motion.div>
-
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-2 gap-2 md:hidden"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.55 }}
+        transition={{ delay: 0.35 }}
       >
         {quickActions.map((action) => (
           <button
             key={action.label}
             type="button"
             onClick={() => handleQuickAction(action.prompt)}
-            className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/80 p-3 text-left transition-all active:scale-[0.97] hover:border-[#0073CF]/30 hover:bg-[#0073CF]/5"
+            className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-card/80 px-3 py-2.5 text-left transition-all active:scale-[0.97] hover:border-[#0073CF]/30 hover:bg-[#0073CF]/5"
           >
             <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${action.color}`}
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${action.color}`}
             >
-              <action.icon className="h-4 w-4 text-white" />
+              <action.icon className="h-3.5 w-3.5 text-white" />
             </div>
             <span className="text-xs font-medium leading-tight">
               {action.label}
@@ -162,26 +128,55 @@ export const Greeting = ({ chatId, sendMessage }: GreetingProps) => {
         ))}
       </motion.div>
 
-      {/* Sidebar hint (mobile only) */}
+      {/* Connected indicator (mobile) */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="mt-5 md:hidden"
+        className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground mt-4 md:hidden"
         exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.65 }}
+        transition={{ delay: 0.5 }}
       >
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full gap-2 text-xs text-muted-foreground border-dashed"
-          onClick={() => setOpenMobile(true)}
-        >
-          <Menu className="h-4 w-4" />
-          Open menu for Tools, Prompts & Settings
-        </Button>
+        <div className="h-1.5 w-1.5 rounded-full bg-[#0073CF] animate-pulse" />
+        <span>Connected to Boomi Platform</span>
       </motion.div>
 
-      {/* ── Desktop-only content (Available Tools + Prompt Library) ─ */}
+      {/* ─────────── Desktop layout ─────────── */}
+
+      {/* Title */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="hidden md:block font-bold text-4xl bg-gradient-to-r from-[#0073CF] to-[#00A3E0] bg-clip-text text-transparent"
+        exit={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 10 }}
+        transition={{ delay: 0.5 }}
+      >
+        Welcome to Boomi Assistant
+      </motion.div>
+
+      {/* Subtitle */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="hidden md:block text-xl text-muted-foreground mt-2"
+        exit={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 10 }}
+        transition={{ delay: 0.6 }}
+      >
+        Manage your integrations, processes, and trading partners with
+        AI-powered assistance
+      </motion.div>
+
+      {/* Connect banner (desktop) */}
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="hidden md:block mt-6 mb-4"
+        exit={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 10 }}
+        transition={{ delay: 0.7 }}
+      >
+        <BoomiConnectBanner />
+      </motion.div>
+
+      {/* Available Tools (desktop) */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="hidden md:block mt-4 mb-4"
@@ -192,6 +187,7 @@ export const Greeting = ({ chatId, sendMessage }: GreetingProps) => {
         <AvailableTools />
       </motion.div>
 
+      {/* Prompt Library (desktop) */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="hidden md:block mt-4 mb-4"
@@ -202,15 +198,15 @@ export const Greeting = ({ chatId, sendMessage }: GreetingProps) => {
         <PromptLibrary chatId={chatId} sendMessage={sendMessage} />
       </motion.div>
 
-      {/* ── Connected indicator ────────────────────────────────── */}
+      {/* Connected indicator (desktop) */}
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center md:justify-start gap-2 text-xs md:text-sm text-muted-foreground mt-4"
+        className="hidden md:flex items-center gap-2 text-sm text-muted-foreground"
         exit={{ opacity: 0, y: 10 }}
         initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.7 }}
+        transition={{ delay: 0.85 }}
       >
-        <div className="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-[#0073CF] animate-pulse" />
+        <div className="h-2 w-2 rounded-full bg-[#0073CF] animate-pulse" />
         <span>Connected to Boomi Platform</span>
       </motion.div>
     </div>

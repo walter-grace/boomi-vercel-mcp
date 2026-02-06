@@ -63,7 +63,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
 
   return (
     <div
-      className="w-full space-y-3 sm:space-y-4"
+      className="hidden w-full space-y-3 md:block md:space-y-4"
       data-testid="suggested-actions"
     >
       <motion.div
