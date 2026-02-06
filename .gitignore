@@ -75,6 +75,13 @@ yarn-error.log*
 !components/password-protection*.tsx
 !components/*password*.tsx
 
+# But allow application source files that match secret/credential patterns
+!components/boomi-credentials-form.tsx
+!components/*credential*.tsx
+!app/api/boomi-credentials/
+!app/api/boomi-credentials/**
+!lib/encryption.ts
+
 # But allow documentation/templates
 !*secret*.example
 !*key*.example
