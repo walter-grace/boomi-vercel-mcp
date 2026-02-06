@@ -1,16 +1,13 @@
 import { tool } from "ai";
 import { z } from "zod";
+import {
+  type MCPServerConfig,
+  getEnabledMCPServers,
+} from "./mcp-servers";
 
-function getMCPServerURL(): string {
-  if (typeof process !== "undefined" && process.env?.BOOMI_MCP_SERVER_URL) {
-    return process.env.BOOMI_MCP_SERVER_URL;
-  }
-  return "https://boomi-mcp-server-replitzip.replit.app/mcp";
-}
+// ─── Types ───────────────────────────────────────────────────────────
 
-const MCP_SERVER_URL = getMCPServerURL();
-
-interface MCPTool {
+export interface MCPTool {
   name: string;
   description: string;
   inputSchema: {
@@ -18,6 +15,13 @@ interface MCPTool {
     properties: Record<string, unknown>;
     required?: string[];
   };
+}
+
+/** MCPTool decorated with which server it came from */
+export interface MCPToolWithServer extends MCPTool {
+  _serverId: string;
+  _serverName: string;
+  _serverColor: string;
 }
 
 interface MCPToolsListResponse {
@@ -32,18 +36,21 @@ interface MCPToolsListResponse {
   id: number;
 }
 
+// ─── In-memory cache ─────────────────────────────────────────────────
+
 let mcpToolsCache: Record<string, ReturnType<typeof tool>> | null = null;
 
+// ─── Low-level helpers ───────────────────────────────────────────────
+
 /**
- * Initialize MCP connection by calling the initialize method
+ * Initialize MCP connection by calling the initialize method.
+ * Each server requires its own initialisation handshake.
  */
-async function initializeMCPConnection(): Promise<boolean> {
+async function initializeMCPConnection(serverUrl: string): Promise<boolean> {
   try {
-    const response = await fetch(MCP_SERVER_URL, {
+    const response = await fetch(serverUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0",
         id: 1,
@@ -66,28 +73,29 @@ async function initializeMCPConnection(): Promise<boolean> {
     await response.json();
     return true;
   } catch (error) {
-    console.error("Failed to initialize MCP connection:", error);
+    console.error(`Failed to initialize MCP connection to ${serverUrl}:`, error);
     return false;
   }
 }
 
+// ─── Fetch tools ─────────────────────────────────────────────────────
+
 /**
- * Fetch MCP tools from the Boomi server using JSON-RPC
+ * Fetch MCP tools from a **single** server, tagged with server metadata.
  */
-export async function fetchMCPTools(): Promise<MCPTool[]> {
+async function fetchMCPToolsFromServer(
+  server: MCPServerConfig
+): Promise<MCPToolWithServer[]> {
   try {
-    // Initialize connection first
-    await initializeMCPConnection();
+    await initializeMCPConnection(server.url);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
 
     try {
-      const response = await fetch(MCP_SERVER_URL, {
+      const response = await fetch(server.url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         signal: controller.signal,
         body: JSON.stringify({
           jsonrpc: "2.0",
@@ -100,33 +108,64 @@ export async function fetchMCPTools(): Promise<MCPTool[]> {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`MCP server returned ${response.status}`);
+        throw new Error(`MCP server ${server.id} returned ${response.status}`);
       }
 
       const data = (await response.json()) as MCPToolsListResponse;
 
       if (data.error) {
-        throw new Error(data.error.message || "MCP server error");
+        throw new Error(data.error.message || `MCP server ${server.id} error`);
       }
 
-      return data.result?.tools || [];
+      const tools = data.result?.tools || [];
+
+      // Tag every tool with its source server
+      return tools.map((t) => ({
+        ...t,
+        _serverId: server.id,
+        _serverName: server.name,
+        _serverColor: server.color,
+      }));
     } catch (error) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
-        console.error("MCP server request timed out after 10 seconds");
+        console.error(`MCP server ${server.id} timed out after 10 s`);
         return [];
       }
       throw error;
     }
   } catch (error) {
-    console.error("Failed to fetch MCP tools:", error);
+    console.error(`Failed to fetch tools from ${server.id}:`, error);
     return [];
   }
 }
 
 /**
- * Convert JSON schema to Zod schema (simplified)
+ * Fetch tools from ALL enabled MCP servers in parallel.
+ * This is the public API used by the `/api/mcp-tools` route (for the UI cache).
  */
+export async function fetchMCPTools(): Promise<MCPToolWithServer[]> {
+  const servers = getEnabledMCPServers();
+  const results = await Promise.all(servers.map(fetchMCPToolsFromServer));
+  return results.flat();
+}
+
+/**
+ * Fetch tools from a specific server only (useful for targeted refresh).
+ */
+export async function fetchMCPToolsForServer(
+  serverId: string
+): Promise<MCPToolWithServer[]> {
+  const servers = getEnabledMCPServers();
+  const server = servers.find((s) => s.id === serverId);
+  if (!server) {
+    return [];
+  }
+  return fetchMCPToolsFromServer(server);
+}
+
+// ─── JSON Schema → Zod conversion ───────────────────────────────────
+
 function jsonSchemaToZod(schema: MCPTool["inputSchema"]): z.ZodTypeAny {
   if (schema.type === "object" && schema.properties) {
     const shape: Record<string, z.ZodTypeAny> = {};
@@ -147,10 +186,13 @@ function jsonSchemaToZod(schema: MCPTool["inputSchema"]): z.ZodTypeAny {
   return z.object({});
 }
 
+// ─── Tool conversion ─────────────────────────────────────────────────
+
 /**
- * Convert MCP tool to AI SDK tool format
+ * Convert an MCP tool into an AI SDK tool.
+ * The `serverUrl` is captured in the closure so each tool calls the right server.
  */
-function convertMCPToolToAITool(mcpTool: MCPTool) {
+function convertMCPToolToAITool(mcpTool: MCPToolWithServer, serverUrl: string) {
   return {
     name: mcpTool.name,
     tool: tool({
@@ -159,21 +201,20 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
       execute: async (args) => {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for tool calls
+          const timeoutId = setTimeout(() => controller.abort(), 30_000);
 
           try {
-            // Workaround for manage_process, manage_trading_partner, manage_organization
-            // These tools seem to have issues with keyword arguments, so we ensure action comes first
+            // Reorder "action" first for tools that need it
             let processedArgs = args;
             if (
               (mcpTool.name === "manage_process" ||
                 mcpTool.name === "manage_trading_partner" ||
-                mcpTool.name === "manage_organization") &&
+                mcpTool.name === "manage_organization" ||
+                mcpTool.name === "manage_connection") &&
               args &&
               typeof args === "object" &&
               "action" in args
             ) {
-              // Reorder to put action first, which might help with server-side parsing
               processedArgs = {
                 action: args.action,
                 ...Object.fromEntries(
@@ -182,11 +223,9 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
               };
             }
 
-            const response = await fetch(MCP_SERVER_URL, {
+            const response = await fetch(serverUrl, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               signal: controller.signal,
               body: JSON.stringify({
                 jsonrpc: "2.0",
@@ -223,83 +262,33 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
             const content = data.result?.content?.[0]?.text;
             if (content) {
               try {
-                // Try to parse as JSON, fallback to string
                 const parsed = JSON.parse(content);
-                
-                // Check for the specific error about missing 'action' parameter
-                // This is a known server-side bug - log it for debugging
+
+                // Log known server-side bugs for debugging
                 if (
                   parsed.error &&
                   typeof parsed.error === "string" &&
-                  parsed.error.includes("missing 1 required positional argument: 'action'")
+                  parsed.error.includes(
+                    "missing 1 required positional argument: 'action'"
+                  )
                 ) {
                   console.error(
-                    `[MCP] ⚠️  Server-side bug detected for ${mcpTool.name}`
-                  );
-                  console.error(
-                    `[MCP] The server is not receiving the 'action' parameter correctly.`
-                  );
-                  console.error(
-                    `[MCP] Arguments we sent:`,
+                    `[MCP:${mcpTool._serverId}] Server-side bug for ${mcpTool.name}`,
                     JSON.stringify(processedArgs, null, 2)
                   );
-                  console.error(
-                    `[MCP] Full request was:`,
-                    JSON.stringify(
-                      {
-                        jsonrpc: "2.0",
-                        method: "tools/call",
-                        params: {
-                          name: mcpTool.name,
-                          arguments: processedArgs,
-                        },
-                      },
-                      null,
-                      2
-                    )
-                  );
-                  console.error(
-                    `[MCP] 💡 This is a bug in the MCP server's Python code.`
-                  );
-                  console.error(
-                    `[MCP] The server should be updated to properly handle keyword arguments.`
-                  );
                 }
-                
-                // Check for Boomi API errors (406, 404, etc.)
+
+                // Log Boomi API errors
                 if (
                   parsed.result &&
                   parsed.result._success === false &&
                   parsed.result.error
                 ) {
-                  const errorMsg = parsed.result.error;
-                  if (errorMsg.includes("406 error") || errorMsg.includes("ApiError")) {
-                    console.error(
-                      `[MCP] ⚠️  Boomi API error for ${mcpTool.name}`
-                    );
-                    console.error(
-                      `[MCP] Error: ${parsed.result.error}`
-                    );
-                    if (parsed.result.hint) {
-                      console.error(
-                        `[MCP] Hint: ${parsed.result.hint}`
-                      );
-                    }
-                    console.error(
-                      `[MCP] This might indicate:`
-                    );
-                    console.error(
-                      `[MCP]   - The component ID format is incorrect`
-                    );
-                    console.error(
-                      `[MCP]   - The API endpoint expects different parameters`
-                    );
-                    console.error(
-                      `[MCP]   - Access permissions issue`
-                    );
-                  }
+                  console.error(
+                    `[MCP:${mcpTool._serverId}] API error for ${mcpTool.name}: ${parsed.result.error}`
+                  );
                 }
-                
+
                 return parsed;
               } catch {
                 return content;
@@ -310,8 +299,13 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
           } catch (error) {
             clearTimeout(timeoutId);
             if (error instanceof Error && error.name === "AbortError") {
-              console.error(`MCP tool ${mcpTool.name} timed out after 30 seconds`);
-              return { error: "Request timeout: MCP server took too long to respond" };
+              console.error(
+                `MCP tool ${mcpTool.name} (${mcpTool._serverId}) timed out after 30 s`
+              );
+              return {
+                error:
+                  "Request timeout: MCP server took too long to respond",
+              };
             }
             throw error;
           }
@@ -322,13 +316,15 @@ function convertMCPToolToAITool(mcpTool: MCPTool) {
             error: `Failed to execute ${mcpTool.name}: ${errorMessage}`,
           };
         }
-    },
+      },
     }),
   };
 }
 
+// ─── Boomi credential helpers ────────────────────────────────────────
+
 /**
- * Automatically set Boomi credentials from environment variables if available
+ * Automatically set Boomi credentials from environment variables.
  */
 async function autoSetBoomiCredentials(): Promise<void> {
   const accountId =
@@ -348,68 +344,18 @@ async function autoSetBoomiCredentials(): Promise<void> {
       ? process.env.BOOMI_PROFILE_NAME
       : "production";
 
-  // Only set if all required variables are present
   if (accountId && username && apiToken) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-      try {
-        const response = await fetch(MCP_SERVER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            id: Date.now(),
-            method: "tools/call",
-            params: {
-              name: "set_boomi_credentials",
-              arguments: {
-                profile: profileName,
-                account_id: accountId,
-                username: username,
-                password: apiToken, // MCP server expects 'password' parameter
-              },
-            },
-          }),
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = (await response.json()) as {
-            jsonrpc: string;
-            result?: {
-              content: Array<{ type: string; text: string }>;
-            };
-            error?: { code: number; message: string };
-          };
-
-          if (!data.error) {
-            console.log(`✅ Auto-configured Boomi profile: ${profileName}`);
-          } else {
-            console.warn(
-              `⚠️  Failed to auto-set Boomi credentials: ${data.error.message}`
-            );
-          }
-        }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.warn(
-            `⚠️  Failed to auto-set Boomi credentials: ${error.message}`
-          );
-        }
-      }
-    } catch (error) {
-      // Silently fail - credentials can be set manually if needed
-    }
+    await sendCredentialsToServer("boomi", {
+      profile: profileName,
+      account_id: accountId,
+      username,
+      password: apiToken,
+    });
   }
 }
 
 /**
- * Set user-specific Boomi credentials on the MCP server
+ * Set user-specific Boomi credentials on the MCP server.
  */
 export async function setUserBoomiCredentials(credentials: {
   accountId: string;
@@ -417,12 +363,46 @@ export async function setUserBoomiCredentials(credentials: {
   apiToken: string;
   profileName: string;
 }): Promise<void> {
+  await sendCredentialsToServer("boomi", {
+    profile: credentials.profileName,
+    account_id: credentials.accountId,
+    username: credentials.username,
+    password: credentials.apiToken,
+  });
+}
+
+/**
+ * Generic helper to set credentials on any MCP server via its
+ * `set_*_credentials` tool. Currently supports "boomi".
+ * Extend with "aws" when the AWS MCP server is connected.
+ */
+async function sendCredentialsToServer(
+  serverId: string,
+  params: Record<string, string>
+): Promise<void> {
+  const servers = getEnabledMCPServers();
+  const server = servers.find((s) => s.id === serverId);
+  if (!server) {
+    return;
+  }
+
+  // Map server id → tool name
+  const credentialToolMap: Record<string, string> = {
+    boomi: "set_boomi_credentials",
+    // aws: "set_aws_credentials",  // future
+  };
+
+  const toolName = credentialToolMap[serverId];
+  if (!toolName) {
+    return;
+  }
+
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
 
     try {
-      const response = await fetch(MCP_SERVER_URL, {
+      const response = await fetch(server.url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
@@ -430,15 +410,7 @@ export async function setUserBoomiCredentials(credentials: {
           jsonrpc: "2.0",
           id: Date.now(),
           method: "tools/call",
-          params: {
-            name: "set_boomi_credentials",
-            arguments: {
-              profile: credentials.profileName,
-              account_id: credentials.accountId,
-              username: credentials.username,
-              password: credentials.apiToken, // MCP server expects 'password' parameter
-            },
-          },
+          params: { name: toolName, arguments: params },
         }),
       });
 
@@ -447,19 +419,17 @@ export async function setUserBoomiCredentials(credentials: {
       if (response.ok) {
         const data = (await response.json()) as {
           jsonrpc: string;
-          result?: {
-            content: Array<{ type: string; text: string }>;
-          };
+          result?: { content: Array<{ type: string; text: string }> };
           error?: { code: number; message: string };
         };
 
         if (!data.error) {
           console.log(
-            `✅ Set Boomi credentials for profile: ${credentials.profileName}`
+            `✅ Credentials set on ${server.name} (${params.profile ?? "default"})`
           );
         } else {
           console.warn(
-            `⚠️  Failed to set user Boomi credentials: ${data.error.message}`
+            `⚠️  Failed to set credentials on ${server.name}: ${data.error.message}`
           );
         }
       }
@@ -467,25 +437,23 @@ export async function setUserBoomiCredentials(credentials: {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name !== "AbortError") {
         console.warn(
-          `⚠️  Failed to set user Boomi credentials: ${error.message}`
+          `⚠️  Failed to set credentials on ${server.name}: ${error.message}`
         );
       }
     }
-  } catch (error) {
-    // Silently fail - credentials can be set manually if needed
-    console.warn("Failed to set user Boomi credentials");
+  } catch {
+    // Silently fail — credentials can be set manually
   }
 }
 
+// ─── Public API ──────────────────────────────────────────────────────
+
 /**
- * Get MCP tools from the Boomi server, converted to AI SDK format
- * Caches tools to avoid repeated calls
- * 
- * @param userCredentials - Optional user-specific Boomi credentials.
- *                          If provided, these will be used instead of env vars.
- *                          If not provided, falls back to environment variables.
+ * Get tools from ALL enabled MCP servers, converted to AI SDK format.
+ *
+ * @param userCredentials  Optional Boomi credentials (takes priority over env vars).
  */
-export async function getBoomiMCPTools(
+export async function getMCPTools(
   userCredentials?: {
     accountId: string;
     username: string;
@@ -493,42 +461,48 @@ export async function getBoomiMCPTools(
     profileName: string;
   }
 ): Promise<Record<string, ReturnType<typeof tool>>> {
-  // If we have cached tools but user credentials are provided,
-  // we need to set credentials first (credentials may have changed)
-  if (mcpToolsCache && userCredentials) {
-    await setUserBoomiCredentials(userCredentials);
-    // Don't return cached tools - we want to ensure credentials are set
-  }
-
-  // Set credentials if provided, otherwise use env vars (backward compatibility)
+  // 1. Set Boomi credentials
   if (userCredentials) {
     await setUserBoomiCredentials(userCredentials);
   } else {
-    // Auto-set credentials from environment variables
     await autoSetBoomiCredentials();
   }
 
-  const mcpTools = await fetchMCPTools();
+  // 2. Fetch tools from all servers in parallel
+  const allMcpTools = await fetchMCPTools();
 
-  if (mcpTools.length === 0) {
+  if (allMcpTools.length === 0) {
     return {};
   }
 
-  // Convert MCP tools to AI SDK tools
-  const aiTools = mcpTools.map(convertMCPToolToAITool);
+  // 3. Resolve each tool's server URL for the execute closure
+  const serverUrlMap = new Map<string, string>();
+  for (const server of getEnabledMCPServers()) {
+    serverUrlMap.set(server.id, server.url);
+  }
 
-  // Store in cache with names
+  // 4. Convert to AI SDK tools
+  const aiTools = allMcpTools.map((t) => {
+    const serverUrl = serverUrlMap.get(t._serverId) || "";
+    return convertMCPToolToAITool(t, serverUrl);
+  });
+
+  // 5. Cache
   mcpToolsCache = Object.fromEntries(
-    aiTools.map((tool) => [tool.name, tool.tool])
+    aiTools.map((t) => [t.name, t.tool])
   ) as Record<string, ReturnType<typeof tool>>;
 
   return mcpToolsCache;
 }
 
 /**
- * Clear the MCP tools cache (useful for testing or reconnection)
+ * Backward-compatible alias. Use `getMCPTools` for new code.
+ */
+export const getBoomiMCPTools = getMCPTools;
+
+/**
+ * Clear the in-memory MCP tools cache.
  */
 export function clearMCPCache() {
   mcpToolsCache = null;
 }
-

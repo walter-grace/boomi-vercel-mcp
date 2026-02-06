@@ -18,10 +18,36 @@ interface MCPTool {
     properties: Record<string, unknown>;
     required?: string[];
   };
+  _serverId?: string;
+  _serverName?: string;
+  _serverColor?: string;
+}
+
+interface MCPServerInfo {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
 }
 
 function categorizeTool(name: string): string {
   const lowerName = name.toLowerCase();
+
+  // AWS tools (prefixed with common AWS service names)
+  if (
+    lowerName.startsWith("s3_") ||
+    lowerName.startsWith("lambda_") ||
+    lowerName.startsWith("iam_") ||
+    lowerName.startsWith("cloudwatch_") ||
+    lowerName.startsWith("ec2_") ||
+    lowerName.startsWith("dynamodb_") ||
+    lowerName.startsWith("sqs_") ||
+    lowerName.startsWith("sns_") ||
+    lowerName.startsWith("aws_")
+  ) {
+    return "AWS Services";
+  }
+
   if (lowerName.includes("profile") || lowerName.includes("credential") || lowerName.includes("account")) {
     return "Profile Management";
   }
@@ -211,6 +237,17 @@ function getExamplePrompts(toolName: string): string[] {
       "Create a new organization",
       "Get organization xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     ],
+    // Connection management
+    get_connection: [
+      "Get full details for connection b940c326-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "Show me the configuration of my S3 connection",
+      "What credentials are used in connection abc123?",
+    ],
+    manage_connection: [
+      "Create a new S3 connection with my AWS credentials",
+      "Update my database connection with new credentials",
+      "Delete the test connection from my account",
+    ],
     // Atom Action Tools
     execute_process: [
       "Run process abc-123 on my production atom",
@@ -250,13 +287,34 @@ function getExamplePrompts(toolName: string): string[] {
   };
 
   return prompts[toolName] || [
-    `Use ${toolName} to interact with Boomi`,
+    `Use ${formatToolName(toolName)} to interact with your platform`,
     `Try: "Use ${toolName}"`,
   ];
 }
 
+/**
+ * Small coloured badge that indicates which MCP server a tool belongs to.
+ */
+function ServerBadge({ tool }: { tool: MCPTool }) {
+  if (!tool._serverId || !tool._serverName) {
+    return null;
+  }
+  return (
+    <span
+      className="ml-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-semibold leading-none"
+      style={{
+        backgroundColor: `${tool._serverColor ?? "#666"}18`,
+        color: tool._serverColor ?? "#666",
+      }}
+    >
+      {tool._serverName}
+    </span>
+  );
+}
+
 export function AvailableTools() {
   const [tools, setTools] = useState<MCPTool[]>([]);
+  const [servers, setServers] = useState<MCPServerInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isCached, setIsCached] = useState(false);
@@ -275,6 +333,7 @@ export function AvailableTools() {
         const data = await response.json();
         setTools(data.tools || []);
         setIsCached(data.cached ?? false);
+        setServers(data.servers ?? []);
       }
     } catch (error) {
       console.error("Failed to load tools:", error);
@@ -340,8 +399,15 @@ export function AvailableTools() {
     "Process Management",
     "Executions",
     "Management",
+    "AWS Services",
     "Other",
   ];
+
+  // Count tools per server for the header
+  const serverToolCounts = servers.map((s) => ({
+    ...s,
+    count: tools.filter((t) => t._serverId === s.id).length,
+  }));
 
   return (
     <Card className="border-[#0073CF]/20 bg-gradient-to-r from-[#0073CF]/5 to-[#00A3E0]/5">
@@ -354,6 +420,25 @@ export function AvailableTools() {
                 <CardTitle className="text-lg font-semibold">
                   Available Tools ({tools.length})
                 </CardTitle>
+                {/* Server pills */}
+                {serverToolCounts.map((s) =>
+                  s.count > 0 ? (
+                    <span
+                      key={s.id}
+                      className="hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        backgroundColor: `${s.color}18`,
+                        color: s.color,
+                      }}
+                    >
+                      <span
+                        className="inline-block h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: s.color }}
+                      />
+                      {s.name} ({s.count})
+                    </span>
+                  ) : null
+                )}
                 {isCached && (
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-500/10 text-green-600">
                     cached
@@ -417,20 +502,23 @@ export function AvailableTools() {
                   </button>
                   {isCategoryOpen && (
                     <div className="px-3 pb-3 space-y-2">
-                      {categoryTools.map((tool) => {
-                        const requiredParams = getRequiredParams(tool.inputSchema);
+                      {categoryTools.map((mcpTool) => {
+                        const requiredParams = getRequiredParams(mcpTool.inputSchema);
                         return (
                           <div
-                            key={tool.name}
+                            key={mcpTool.name}
                             className="p-3 rounded-md bg-background/50 border border-[#0073CF]/5"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
-                                <div className="font-mono text-xs font-semibold text-[#0073CF] mb-1">
-                                  {tool.name}
+                                <div className="flex items-center">
+                                  <span className="font-mono text-xs font-semibold text-[#0073CF]">
+                                    {mcpTool.name}
+                                  </span>
+                                  <ServerBadge tool={mcpTool} />
                                 </div>
-                                <div className="text-xs text-muted-foreground mb-2">
-                                  {tool.description}
+                                <div className="text-xs text-muted-foreground mb-2 mt-1">
+                                  {mcpTool.description}
                                 </div>
                                 {requiredParams.length > 0 && (
                                   <div className="mt-2 pt-2 border-t border-[#0073CF]/10">
@@ -454,12 +542,12 @@ export function AvailableTools() {
                                     Example Prompts:
                                   </div>
                                   <div className="space-y-1">
-                                    {getExamplePrompts(tool.name).map((prompt, idx) => (
+                                    {getExamplePrompts(mcpTool.name).map((prompt, idx) => (
                                       <div
                                         key={idx}
                                         className="text-xs text-foreground/80 italic pl-2 border-l-2 border-[#0073CF]/20"
                                       >
-                                        "{prompt}"
+                                        &ldquo;{prompt}&rdquo;
                                       </div>
                                     ))}
                                   </div>
@@ -480,4 +568,3 @@ export function AvailableTools() {
     </Card>
   );
 }
-

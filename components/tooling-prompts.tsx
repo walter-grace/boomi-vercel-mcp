@@ -537,6 +537,68 @@ const sections: PromptSection[] = [
     ],
   },
   {
+    title: "Connection Management",
+    icon: "🔗",
+    description: "Inspect, create, and manage Boomi connections",
+    prompts: [
+      {
+        id: "cm-1",
+        title: "List All Connections",
+        prompt:
+          "List all connections in my Boomi account. Show the name, connector type, ID, and folder for each.",
+        tools: ["list_connections"],
+        expected: "Connection list with type details",
+      },
+      {
+        id: "cm-2",
+        title: "Get Connection Details",
+        prompt:
+          "Get the full details of my S3 connection, including all configured fields.",
+        tools: ["list_connections", "get_connection"],
+        expected: "Finds S3 connection by name, returns full field config",
+      },
+      {
+        id: "cm-3",
+        title: "Create S3 Connection",
+        prompt:
+          "Create a new S3 connection in Boomi. My AWS credentials are:\n- Access Key: AKIAIOSFODNN7EXAMPLE\n- Secret Key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY\n- Bucket: my-data-bucket\n- Region: us-east-1",
+        tools: ["manage_connection"],
+        expected: "Creates connection with action=create and connector_type=amazons3",
+      },
+      {
+        id: "cm-4",
+        title: "Connection Audit",
+        prompt:
+          "Audit my connections: What types of connectors am I using? Are there any unused connections not referenced by any process?",
+        tools: ["list_connections", "manage_process"],
+        expected: "Cross-references connections with processes to find orphans",
+      },
+    ],
+  },
+  {
+    title: "Cross-Platform (Boomi + AWS)",
+    icon: "🌐",
+    description: "Workflows that span Boomi and AWS when both servers are connected",
+    prompts: [
+      {
+        id: "cp-1",
+        title: "S3 End-to-End Setup",
+        prompt:
+          "Help me set up an S3 integration end-to-end:\n1. Create an S3 connection in Boomi with my AWS credentials\n2. Show me what processes could use this connection\n3. Suggest next steps for building a data pipeline",
+        tools: ["manage_connection", "manage_process"],
+        expected: "Creates connection, analyzes processes, suggests pipeline architecture",
+      },
+      {
+        id: "cp-2",
+        title: "Infrastructure Cross-Reference",
+        prompt:
+          "Compare my AWS S3 buckets with my Boomi S3 connections. Are there any buckets I'm not using in Boomi, or Boomi connections pointing to buckets that don't exist?",
+        tools: ["list_connections", "get_connection"],
+        expected: "Cross-references Boomi connections with AWS resources (when AWS MCP available)",
+      },
+    ],
+  },
+  {
     title: "Edge Cases & Error Handling",
     icon: "⚠️",
     description: "Test error handling and edge cases",

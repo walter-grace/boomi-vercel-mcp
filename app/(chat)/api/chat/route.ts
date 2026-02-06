@@ -13,7 +13,7 @@ import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { getLanguageModel } from "@/lib/ai/providers";
-import { getBoomiMCPTools } from "@/lib/ai/mcp-client";
+import { getMCPTools } from "@/lib/ai/mcp-client";
 import { getUserBoomiCredentials } from "@/lib/db/queries";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
@@ -145,9 +145,9 @@ export async function POST(request: Request) {
     // Get user's Boomi credentials if available
     const userBoomiCreds = await getUserBoomiCredentials(session.user.id);
 
-    // Get Boomi MCP tools (with user credentials if available)
-    console.log("[Chat] Fetching Boomi MCP tools...");
-    const boomiMCPTools = await getBoomiMCPTools(
+    // Get MCP tools from all enabled servers (with user credentials if available)
+    console.log("[Chat] Fetching MCP tools from all servers...");
+    const mcpTools = await getMCPTools(
       userBoomiCreds
         ? {
             accountId: userBoomiCreds.accountId,
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
           }
         : undefined // Falls back to env vars if not set
     );
-    const mcpToolNames = Object.keys(boomiMCPTools);
+    const mcpToolNames = Object.keys(mcpTools);
     console.log(`[Chat] ✅ MCP Tools loaded: ${mcpToolNames.length} tools`);
     if (mcpToolNames.length > 0) {
       console.log(`[Chat] MCP Tool names: ${mcpToolNames.join(", ")}`);
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
           createDocument: createDocument({ session, dataStream }),
           updateDocument: updateDocument({ session, dataStream }),
           requestSuggestions: requestSuggestions({ session, dataStream }),
-          ...boomiMCPTools,
+          ...mcpTools,
         } as any;
         
         console.log(`[Chat] ✅ All tools merged: ${Object.keys(allTools).length} total`);

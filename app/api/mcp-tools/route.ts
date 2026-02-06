@@ -1,5 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { fetchMCPTools } from "@/lib/ai/mcp-client";
+import { getEnabledMCPServers } from "@/lib/ai/mcp-servers";
 import {
   getCachedMcpTools,
   saveCachedMcpTools,
@@ -7,12 +8,15 @@ import {
 
 /**
  * GET /api/mcp-tools
- * Returns list of available MCP tools from the Boomi server.
+ * Returns list of available MCP tools from ALL enabled MCP servers.
+ *
+ * Each tool in the response includes `_serverId`, `_serverName`, and
+ * `_serverColor` so the UI can display server badges.
  *
  * Cache strategy (per-user, DB-backed):
  *   1. Check DB for a non-expired cache row for this user → return instantly
- *   2. On cache miss, fetch from the Replit MCP server (2 round-trips)
- *   3. Store the result in the DB so subsequent loads are instant
+ *   2. On cache miss, fetch from all enabled MCP servers in parallel
+ *   3. Store the merged result in the DB so subsequent loads are instant
  *   4. Also set Cache-Control so the browser caches for 60 s
  */
 export async function GET() {
@@ -31,18 +35,31 @@ export async function GET() {
           `[MCP Cache] ✅ HIT — ${tools.length} tools from DB for user ${userId.substring(0, 8)}…`
         );
         return Response.json(
-          { tools, cached: true },
+          {
+            tools,
+            cached: true,
+            servers: getEnabledMCPServers().map((s) => ({
+              id: s.id,
+              name: s.name,
+              color: s.color,
+              icon: s.icon,
+            })),
+          },
           {
             headers: {
-              "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+              "Cache-Control":
+                "private, max-age=60, stale-while-revalidate=120",
             },
           }
         );
       }
     }
 
-    // ── 3. Cache miss → fetch from Replit MCP server ──────────────
-    console.log("[MCP Cache] MISS — fetching from Replit MCP server…");
+    // ── 3. Cache miss → fetch from all MCP servers ────────────────
+    const servers = getEnabledMCPServers();
+    console.log(
+      `[MCP Cache] MISS — fetching from ${servers.length} MCP server(s): ${servers.map((s) => s.id).join(", ")}…`
+    );
     const tools = await fetchMCPTools();
 
     // ── 4. Store in DB for next time ──────────────────────────────
@@ -56,16 +73,26 @@ export async function GET() {
     }
 
     return Response.json(
-      { tools, cached: false },
+      {
+        tools,
+        cached: false,
+        servers: servers.map((s) => ({
+          id: s.id,
+          name: s.name,
+          color: s.color,
+          icon: s.icon,
+        })),
+      },
       {
         headers: {
-          "Cache-Control": "private, max-age=60, stale-while-revalidate=120",
+          "Cache-Control":
+            "private, max-age=60, stale-while-revalidate=120",
         },
       }
     );
   } catch (error) {
     // Gracefully handle errors — return empty array
     console.error("[MCP Cache] Error:", error);
-    return Response.json({ tools: [], cached: false });
+    return Response.json({ tools: [], cached: false, servers: [] });
   }
 }
